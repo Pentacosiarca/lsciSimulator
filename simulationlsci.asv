@@ -2,32 +2,42 @@ clear all, clc, close all,
 % Modelling of particles in a volume
 %% setup parameters:
 % generating randomly distributed particles in a volume
-nParticles = single(100);
-particlesVolumeSizeXyz = single([10; 10; 0.01]);
+nParticles = single(100); % reference value: 100
+particlesVolumeSizeXyz = single([10; 10; 0.01]); % reference value: [10; 10; 0.01]
 
 % defining sensor
-sensorDistanceToZ = single(1000);
-sensorSizeXy = single([0.5; 0.5]);
-sensorResolutionXy = single([100; 100]);
+sensorDistanceToZ = single(1000); % reference value: 1000
+sensorSizeXy = single([0.5; 0.5]); % reference value: [0.5; 0.5]
+sensorResolutionXy = single([50; 50]); % reference value: [100; 100]
 
 % particle moving
-nMoves = single(1000);
-maxSpeedParticle = single(0.001);
-directionParticleDegreesConstant = single(0);
-isOrderedMotion = uint8(1);
+nMoves = single(2000000); % reference value: 1000
+maxSpeedParticle = single(0.001); % reference value: 0.001
+directionParticleDegreesConstant = single(0); % reference value: 0
+kindOfMotion = 'periodic'; % options: 'periodic' 'ordered' 'brownian'
+if strcmp(kindOfMotion,'periodic')
+    isAddNoise = 0;
+    if isAddNoise
+    end
+    mainFreq = 10; % reference: 10
+    maxSpeedParticle = single(0.002); % reference value: 0.001
+    
+
+end
+% isOrderedMotion = uint8(0);
 
 % %%%%%%%% PLOTS %%%%%%%%%%
 % plot the figures
-isPlot = uint8(0);
-    isSavePlot = uint8(0);
+isPlot = uint8(1);
+%     isSavePlot = uint8(0); % to implement
 
 % create gif
 isGif = uint8(0);
-    isSaveGif = uint8(0);
+%     isSaveGif = uint8(0); % to implement
 
 % Calculating Time Intensity Autocorrelation Function (tiaf)
-isCalculateTiaf = uint8(1);
-    isSaveCalculatedTiaf = uint8(0);
+isCalculateTiaf = uint8(0);
+%     isSaveCalculatedTiaf = uint8(0); % to implement
         maxTau = single(50);
         
 % To calibrate the camera position and or particles volume, etc use the
@@ -104,12 +114,16 @@ timeIntensityAutocorrelationFunction = nan(sensorResolutionXy(1),sensorResolutio
 
 for iter = 1:nMoves
 
-    if isOrderedMotion
-        speedParticle = maxSpeedParticle;
-        directionParticleDegrees = directionParticleDegreesConstant;
-    else
-        speedParticle = rand(1,nParticles)*maxSpeedParticle;
-        directionParticleDegrees = randi([0 360],1,nParticles);
+    switch kindOfMotion
+        case 'periodic'
+            speedParticle = maxSpeedParticle;
+            directionParticleDegrees = directionParticleDegreesConstant;
+        case 'ordered'
+            speedParticle = maxSpeedParticle;
+            directionParticleDegrees = directionParticleDegreesConstant;
+        case 'brownian'
+            speedParticle = rand(1,nParticles)*maxSpeedParticle;
+            directionParticleDegrees = randi([0 360],1,nParticles);
     end
         
     particlesPositionXyz(:,1) = particlesPositionXyz(:,1)' + ...
@@ -248,7 +262,7 @@ for iter = 1:nMoves
     
     clear sensorImage 
     
-    if isCalculateTiaf ||
+    if isCalculateTiaf || isGif
         display(['iteration: ',num2str(iter),' of ',num2str(nMoves)])
     end
 end

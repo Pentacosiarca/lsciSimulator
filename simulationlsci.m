@@ -8,13 +8,23 @@ particlesVolumeSizeXyz = single([10; 10; 0.01]); % reference value: [10; 10; 0.0
 % defining sensor
 sensorDistanceToZ = single(1000); % reference value: 1000
 sensorSizeXy = single([0.5; 0.5]); % reference value: [0.5; 0.5]
-sensorResolutionXy = single([100; 100]); % reference value: [100; 100]
+sensorResolutionXy = single([50; 50]); % reference value: [100; 100]
 
 % particle moving
-nMoves = single(1000); % reference value: 1000
+nMoves = single(2000000); % reference value: 1000
 maxSpeedParticle = single(0.001); % reference value: 0.001
 directionParticleDegreesConstant = single(0); % reference value: 0
-isOrderedMotion = uint8(0);
+kindOfMotion = 'periodic'; % options: 'periodic' 'ordered' 'brownian'
+if strcmp(kindOfMotion,'periodic')
+    isAddNoise = 0;
+    if isAddNoise
+    end
+    mainFreq = 10; % reference: 10
+    maxSpeedParticle = single(0.002); % reference value: 0.001
+    periodicMovement = maxSpeedParticle * cos
+
+end
+% isOrderedMotion = uint8(0);
 
 % %%%%%%%% PLOTS %%%%%%%%%%
 % plot the figures
@@ -104,12 +114,16 @@ timeIntensityAutocorrelationFunction = nan(sensorResolutionXy(1),sensorResolutio
 
 for iter = 1:nMoves
 
-    if isOrderedMotion
-        speedParticle = maxSpeedParticle;
-        directionParticleDegrees = directionParticleDegreesConstant;
-    else
-        speedParticle = rand(1,nParticles)*maxSpeedParticle;
-        directionParticleDegrees = randi([0 360],1,nParticles);
+    switch kindOfMotion
+        case 'periodic'
+            speedParticle = maxSpeedParticle;
+            directionParticleDegrees = directionParticleDegreesConstant;
+        case 'ordered'
+            speedParticle = maxSpeedParticle;
+            directionParticleDegrees = directionParticleDegreesConstant;
+        case 'brownian'
+            speedParticle = rand(1,nParticles)*maxSpeedParticle;
+            directionParticleDegrees = randi([0 360],1,nParticles);
     end
         
     particlesPositionXyz(:,1) = particlesPositionXyz(:,1)' + ...
