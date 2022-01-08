@@ -10,26 +10,39 @@ sensorDistanceToZ = single(1000); % reference value: 1000
 sensorSizeXy = single([0.5; 0.5]); % reference value: [0.5; 0.5]
 sensorResolutionXy = single([50; 50]); % reference value: [100; 100]
 
-% particle moving
-nMoves = single(2000000); % reference value: 1000
-maxSpeedParticle = single(0.001); % reference value: 0.001
-directionParticleDegreesConstant = single(0); % reference value: 0
+% particle movement
+nMoves = 200000; % reference value: 1000
+maxSpeedParticle = 0.001; % reference value: 0.001
+directionParticleDegreesConstant = 0; % reference value: 0
 kindOfMotion = 'periodic'; % options: 'periodic' 'ordered' 'brownian'
 if strcmp(kindOfMotion,'periodic')
     isAddNoise = 0;
     if isAddNoise
     end
-    mainFreq = 10; % reference: 10
-    maxSpeedParticle = single(0.002); % reference value: 0.001
-    
+    mainHeartFreq = 10; % reference: 10
+    maxSpeedParticle = 0.004; % reference value: 0.001
+    minSpeedParticle = 0.001;
 
+    fs = 1000; % Sampling frequency (samples per second) 
+    dt = 1/fs; % seconds per sample 
+    nPeriods = 20; 
+    tRecording = nPeriods*mainHeartFreq; % recording time in seconds
+    t = (0:dt:tRecording)'; % seconds 
+    signal = sin (2*pi*mainHeartFreq*t);
+    signal = abs(min(signal)) + signal;
+    signal = signal / max(signal);
+    periodicMovement = minSpeedParticle + ((maxSpeedParticle - minSpeedParticle) * signal); % setting offset and scale
+    nMoves = length(t);
 end
-% isOrderedMotion = uint8(0);
 
-% %%%%%%%% PLOTS %%%%%%%%%%
+% %%%%%%%% PLOTS / SAVING%%%%%%%%%%
+% save the signal
+isSaveSignal = uint8(1);
+
 % plot the figures
-isPlot = uint8(1);
+isPlot = uint8(0);
 %     isSavePlot = uint8(0); % to implement
+
 
 % create gif
 isGif = uint8(0);
@@ -116,7 +129,7 @@ for iter = 1:nMoves
 
     switch kindOfMotion
         case 'periodic'
-            speedParticle = maxSpeedParticle;
+            speedParticle = periodicMovement(iter);
             directionParticleDegrees = directionParticleDegreesConstant;
         case 'ordered'
             speedParticle = maxSpeedParticle;
@@ -240,11 +253,8 @@ for iter = 1:nMoves
     %% create gif
     if isGif
           % Capture the plot as an image 
-        if isOrderedMotion
-            filename = 'Ordered_lscigif.gif';
-        else
-            filename = 'Brownian_lscigif.gif';
-        end
+
+        fileName = [kindOfMotion,'_lscigif.gif'];
         h = figure('Visible','off');
 
         imagesc(sensorImage)
@@ -253,9 +263,9 @@ for iter = 1:nMoves
         [imind,cm] = rgb2ind(im,256); 
         % Write to the GIF File 
         if iter == 1 
-          imwrite(imind,cm,filename,'gif', 'Loopcount',inf); 
+          imwrite(imind,cm,fileName,'gif', 'Loopcount',inf); 
         else 
-          imwrite(imind,cm,filename,'gif','WriteMode','append'); 
+          imwrite(imind,cm,fileName,'gif','WriteMode','append'); 
         end 
           
     end
@@ -267,6 +277,21 @@ for iter = 1:nMoves
     end
 end
 close all
+
+% keyboard;
+
+%% Saving the signal 
+if isSaveSignal
+    fileName = [kindOfMotion,'_signal'];
+    dirFile = dir(['./',fileName,'*']);
+    if exist(dirFile(1).name,'file')>0
+        fileName = [fileName,''num2str(length(dirFile)+1)];
+    else
+        fileName = [kindOfMotion,'_signal'];
+    end
+    fileName = [kindOfMotion,'_signal'];
+    save(['./',fileName],'timeIntensityAutocorrelationFunction','-mat','-v7.3');
+end
 
 %% Calculating Time Intensity Autocorrelation Function (tiaf)
 % isCalculateTiaf = 1;
@@ -292,12 +317,8 @@ if isCalculateTiaf
 
     decorrelationLag = linspace(1,maxTau,maxTau);
     figure,plot(decorrelationLag, tiaf)
-   
-    if isOrderedMotion
-        nameOrder = 'Ordered';
-    else
-        nameOrder = 'Brownian';
-    end
+
+    nameOrder = kindOfMotion;
     
     nameTitle = [nameOrder,' motion'];
     title(nameTitle)
