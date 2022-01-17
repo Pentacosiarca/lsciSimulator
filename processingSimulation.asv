@@ -1,20 +1,19 @@
-clear all, clc, close all,
-
-% camera parameters
-cameraNoise = 0; % to implement
-exposureTime = 0.005; % in seconds
-Fs = 1000; % Sampling frequency (samples per second) 
-nPeriods = 10; 
-
 %% processing the simulation data
-
+clear all, clc, close all,
 savePath = './../data/simulation/';
-load([savePath,'periodic_signal_50_by_50.mat'])
+load([savePath,'periodic_signal500by500.mat'])
 
 lsciLibPath='./'; %path to the root folder with LSCI processing scripts
 addpath(genpath(lsciLibPath));
 
-framesToAverage = exposureTime *Fs;
+% camera parameters
+cameraNoise = 0; % to implement
+cameraExposureTime = 0.005; % in seconds
+
+fs = 1000; % Sampling frequency (samples per second) 
+nPeriods = 20; 
+
+framesToAverage = cameraExposureTime *fs;
 
 dataLsci = nan(size(timeIntensityAutocorrelationFunction,1),...
                size(timeIntensityAutocorrelationFunction,2),...

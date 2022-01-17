@@ -22,11 +22,12 @@ if strcmp(kindOfMotion,'periodic')
     mainHeartFreq = 10; % reference: 10
     maxSpeedParticle = 0.004; % reference value: 0.001
     minSpeedParticle = 0.001;
-
-    fs = 1000; % Sampling frequency (samples per second) 
-    dt = 1/fs; % seconds per sample 
-    nPeriods = 20; 
-    tRecording = nPeriods*mainHeartFreq; % recording time in seconds
+    
+    exposureTime = 0.005; % seconds, reference value = 0.005
+    Fs = 200; % Sampling frequency (samples per second) 
+    dt = (1/Fs) * exposureTime; % seconds per sample 
+    nPeriods = 10; 
+    tRecording = nPeriods / mainHeartFreq; % recording time in seconds
     t = (0:dt:tRecording)'; % seconds 
     signal = sin (2*pi*mainHeartFreq*t);
     signal = abs(min(signal)) + signal;
@@ -125,8 +126,10 @@ particlesFrameCorners = [0,0;...
                          particlesVolumeSizeXyz(1), particlesVolumeSizeXyz(2)];
 timeIntensityAutocorrelationFunction = nan(sensorResolutionXy(1),sensorResolutionXy(2),nMoves);
 
+wb = waitbar(0,'Please wait...');
 for iter = 1:nMoves
-
+%update waitbar
+waitbar(single(iter)/single(nMoves),wb,'Processing simulation...');
     switch kindOfMotion
         case 'periodic'
             speedParticle = periodicMovement(iter);
@@ -277,21 +280,28 @@ for iter = 1:nMoves
     end
 end
 close all
-
+close(wb);
 % keyboard;
 
 %% Saving the signal 
 if isSaveSignal
-    fileName = [kindOfMotion,'_signal'];
+
+    fileName = [kindOfMotion,'_signal_',num2str(sensorResolutionXy(1)),'_by_',num2str(sensorResolutionXy(2))];
     dirFile = dir(['./',fileName,'*']);
-    if exist(dirFile(1).name,'file')>0
-        fileName = [fileName,''num2str(length(dirFile)+1)];
-    else
-        fileName = [kindOfMotion,'_signal'];
+    if ~isempty(dirFile)
+        if length(num2str(length(dirFile)+1))<2
+            numberWithZero = ['0',num2str(length(dirFile)+1)];
+        else
+            numberWithZero = num2str(length(dirFile)+1);
+        end
+        fileName = [fileName,'_',numberWithZero];
     end
-    fileName = [kindOfMotion,'_signal'];
-    save(['./',fileName],'timeIntensityAutocorrelationFunction','-mat','-v7.3');
+    fileName = [fileName,'.mat'];
+    save(['./',fileName],'timeIntensityAutocorrelationFunction','exposureTime','Fs','nPeriods','-mat','-v7.3');
 end
+
+    
+     
 
 %% Calculating Time Intensity Autocorrelation Function (tiaf)
 % isCalculateTiaf = 1;

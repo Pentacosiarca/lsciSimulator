@@ -8,7 +8,7 @@ particlesVolumeSizeXyz = single([10; 10; 0.01]); % reference value: [10; 10; 0.0
 % defining sensor
 sensorDistanceToZ = single(1000); % reference value: 1000
 sensorSizeXy = single([0.5; 0.5]); % reference value: [0.5; 0.5]
-sensorResolutionXy = single([50; 50]); % reference value: [100; 100]
+sensorResolutionXy = single([500; 500]); % reference value: [100; 100]
 
 % particle movement
 nMoves = 200000; % reference value: 1000
@@ -22,11 +22,12 @@ if strcmp(kindOfMotion,'periodic')
     mainHeartFreq = 10; % reference: 10
     maxSpeedParticle = 0.004; % reference value: 0.001
     minSpeedParticle = 0.001;
-
-    fs = 1000; % Sampling frequency (samples per second) 
-    dt = 1/fs; % seconds per sample 
-    nPeriods = 20; 
-    tRecording = nPeriods*mainHeartFreq; % recording time in seconds
+    
+    exposureTime = 0.005; % seconds, reference value = 0.005
+    Fs = 200; % Sampling frequency (samples per second) 
+    dt = (1/Fs) * exposureTime; % seconds per sample 
+    nPeriods = 5; 
+    tRecording = nPeriods / mainHeartFreq; % recording time in seconds
     t = (0:dt:tRecording)'; % seconds 
     signal = sin (2*pi*mainHeartFreq*t);
     signal = abs(min(signal)) + signal;
@@ -38,6 +39,7 @@ end
 % %%%%%%%% PLOTS / SAVING%%%%%%%%%%
 % save the signal
 isSaveSignal = uint8(1);
+saveFolder = './../data/simulation/';
 
 % plot the figures
 isPlot = uint8(0);
@@ -125,8 +127,10 @@ particlesFrameCorners = [0,0;...
                          particlesVolumeSizeXyz(1), particlesVolumeSizeXyz(2)];
 timeIntensityAutocorrelationFunction = nan(sensorResolutionXy(1),sensorResolutionXy(2),nMoves);
 
+wb = waitbar(0,'Please wait...');
 for iter = 1:nMoves
-
+%update waitbar
+waitbar(single(iter)/single(nMoves),wb,'Processing simulation...');
     switch kindOfMotion
         case 'periodic'
             speedParticle = periodicMovement(iter);
@@ -277,14 +281,15 @@ for iter = 1:nMoves
     end
 end
 close all
-
+close(wb);
 % keyboard;
 
 %% Saving the signal 
 if isSaveSignal
-    fileName = [kindOfMotion,'_signal'];
-    dirFile = dir(['./',fileName,'*']);
-    if exist(dirFile(1).name,'file')>0
+
+    fileName = [kindOfMotion,'_signal_',num2str(sensorResolutionXy(1)),'_by_',num2str(sensorResolutionXy(2)),'_fs_',num2str(Fs),'_per_',num2str(nPeriods)];
+    dirFile = dir([saveFolder,fileName,'*']);
+    if ~isempty(dirFile)
         if length(num2str(length(dirFile)+1))<2
             numberWithZero = ['0',num2str(length(dirFile)+1)];
         else
@@ -292,9 +297,12 @@ if isSaveSignal
         end
         fileName = [fileName,'_',numberWithZero];
     end
-
-    save(['./',fileName],'timeIntensityAutocorrelationFunction','-mat','-v7.3');
+    fileName = [fileName,'.mat'];
+    save([saveFolder,fileName],'timeIntensityAutocorrelationFunction','exposureTime','Fs','nPeriods','-mat','-v7.3');
 end
+
+    
+     
 
 %% Calculating Time Intensity Autocorrelation Function (tiaf)
 % isCalculateTiaf = 1;
