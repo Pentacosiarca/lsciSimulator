@@ -143,10 +143,10 @@ waitbar(single(iter)/single(nMoves),wb,'Processing simulation...');
             directionParticleDegrees = randi([0 360],1,nParticles);
     end
         
-    particlesPositionXyz(:,1) = particlesPositionXyz(:,1)' + ...
-                                speedParticle .* cosd(directionParticleDegrees);
-    particlesPositionXyz(:,2) = particlesPositionXyz(:,2)' + ...
-                                speedParticle .* sind(directionParticleDegrees);
+    particlesPositionXyz(:,1) = gpuArray(particlesPositionXyz(:,1)' + ...
+                                speedParticle .* cosd(directionParticleDegrees));
+    particlesPositionXyz(:,2) = gpuArray(particlesPositionXyz(:,2)' + ...
+                                speedParticle .* sind(directionParticleDegrees));
                                 
     %% if particle is out of scope bring it to the begining of the frame
     %       in the same trajectory and direction
@@ -193,9 +193,9 @@ waitbar(single(iter)/single(nMoves),wb,'Processing simulation...');
     sensorPixelsCoordinatesXyzAugmented = repmat(sensorPixelsCoordinatesXyz',[1 1 nParticles]);
 %     clear sensorPixelsCoordinatesXyz 
 
-    euclideanDistanceParticlesToPixelsDifference = bsxfun(@minus,...
+    euclideanDistanceParticlesToPixelsDifference = gpuArray(bsxfun(@minus,...
                                                 particlesAugmented,...
-                                                permute(sensorPixelsCoordinatesXyzAugmented,[3 1 2]));
+                                                permute(sensorPixelsCoordinatesXyzAugmented,[3 1 2])));
     clear particlesAugmented sensorPixelsCoordinatesXyzAugmented 
     euclideanDistanceParticlesToPixelsSumOfSquares = sum(euclideanDistanceParticlesToPixelsDifference.^2,2);
     clear euclideanDistanceParticlesToPixelsDifference
@@ -213,12 +213,12 @@ waitbar(single(iter)/single(nMoves),wb,'Processing simulation...');
     r = euclideanDistanceParticlesToPixelsSumOfSquares;
     clear euclideanDistanceParticlesToPixelsSumOfSquares
     
-    E=exp(1i*k*r -1i*k*c*t)./r;
+    E=gpuArray(exp(1i*k*r -1i*k*c*t)./r);
     clear r
 
     superpositionOfScatteredLight = sum(E,1);
     clear E
-    pixelsIntensity = superpositionOfScatteredLight .* conj(superpositionOfScatteredLight);
+    pixelsIntensity = gpuArray(superpositionOfScatteredLight .* conj(superpositionOfScatteredLight));
     clear superpositionOfScatteredLight
     pixelsIntensity = pixelsIntensity/ mean(pixelsIntensity);
 
@@ -258,7 +258,7 @@ waitbar(single(iter)/single(nMoves),wb,'Processing simulation...');
     if isGif
           % Capture the plot as an image 
 
-        fileName = [kindOfMotion,'_lscigif.gif'];
+        fileName = [savePath,kindOfMotion,'_lscigif.gif'];
         h = figure('Visible','off');
 
         imagesc(sensorImage)
@@ -298,7 +298,7 @@ if isSaveSignal
         fileName = [fileName,'_',numberWithZero];
     end
     fileName = [fileName,'.mat'];
-    save([saveFolder,fileName],'timeIntensityAutocorrelationFunction','exposureTime','Fs','nPeriods','-mat','-v7.3');
+    save([saveFolder,fileName],'timeIntensityAutocorrelationFunction','exposureTime','Fs','nPeriods','mainHeartFreq','-mat','-v7.3');
 end
 
     
