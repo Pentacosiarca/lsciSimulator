@@ -23,13 +23,13 @@ if strcmp(kindOfMotion,'periodic')
     maxSpeedParticle = 0.004; % reference value: 0.001
     minSpeedParticle = 0.001;
     
-    exposureTimeDivision = 0.01; % seconds, reference value = 0.005
-    Fs = 1000; % Sampling frequency (samples per second) 
-    dt = (1/Fs) * exposureTimeDivision; % seconds per sample 
+    exposureTime = 0.005; % seconds, reference value = 0.005
+    Fs = 5000; % Sampling frequency (samples per second) 
+    dt = (1/Fs) * exposureTime; % seconds per sample 
     nPeriods = 5; 
     tRecording = nPeriods / mainHeartFreq; % recording time in seconds
     t = (0:dt:tRecording)'; % seconds 
-    signal = sawtooth (2*pi*mainHeartFreq*t,1/4);
+    signal = sin (2*pi*mainHeartFreq*t);
     signal = abs(min(signal)) + signal;
     signal = signal / max(signal);
     periodicMovement = minSpeedParticle + ((maxSpeedParticle - minSpeedParticle) * signal); % setting offset and scale
@@ -243,7 +243,7 @@ waitbar(single(iter)/single(nMoves),wb,'Processing simulation...');
         exposureCounter = exposureCounter + 1;
         exposureFrames(:,:,exposureCounter) = sensorImage;
         modIter = ceil(iter/ exposureSamples) - floor(iter/ exposureSamples);
-        if modIter == 0
+        if modIter > 0
             exposureCounter = 0;
             timeIntensityCounter = timeIntensityCounter + 1;
             timeIntensityAutocorrelationFunction(:,:,timeIntensityCounter) = mean(exposureFrames,3);
@@ -319,7 +319,7 @@ if isSaveSignal
         fileName = [fileName,'_',numberWithZero];
     end
     fileName = [fileName,'.mat'];
-    save([saveFolder,fileName],'timeIntensityAutocorrelationFunction','exposureTimeDivision','Fs','nPeriods','mainHeartFreq','-mat','-v7.3');
+    save([saveFolder,fileName],'timeIntensityAutocorrelationFunction','exposureTime','Fs','nPeriods','mainHeartFreq','-mat','-v7.3');
 end
 
     
