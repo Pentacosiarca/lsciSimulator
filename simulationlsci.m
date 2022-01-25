@@ -23,7 +23,7 @@ if strcmp(kindOfMotion,'periodic')
     maxSpeedParticle = 0.004; % reference value: 0.001
     minSpeedParticle = 0.001;
     
-    exposureTimeDivision = 0.01; % seconds, reference value = 0.005
+    exposureTimeDivision = 0.001; % seconds, reference value = 0.005
     Fs = 1000; % Sampling frequency (samples per second) 
     dt = (1/Fs) * exposureTimeDivision; % seconds per sample 
     nPeriods = 5; 

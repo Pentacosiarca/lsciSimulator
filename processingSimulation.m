@@ -2,7 +2,7 @@ clear all, clc, close all,
 
 % camera parameters
 cameraNoise = 0; % to implement
-exposureTime = 0.005; % in seconds
+exposureTimeDivision = 0.005; % in seconds
 Fs = 1000; % Sampling frequency (samples per second) 
 nPeriods = 10; 
 mainHeartFreq = 10;
@@ -10,7 +10,7 @@ mainHeartFreq = 10;
 %% processing the simulation data
 
 savePath = './../data/simulation/';
-load([savePath,'periodic_signal_500_by_500_fs_200_per_5.mat'])
+load([savePath,'periodic_signal_100_by_100_fs_1000_per_5_02.mat'])
 
 lsciLibPath='./'; %path to the root folder with LSCI processing scripts
 addpath(genpath(lsciLibPath));
@@ -50,7 +50,7 @@ plot(bfiTemporal)
 isCreateGif = 0;
 if isCreateGif
         kindOfMotion = 'periodic';
-        fileName = [savePath,kindOfMotion,'_lscigif.gif'];
+        fileName = [savePath,kindOfMotion,'_lscigif_sawtooth.gif'];
         h = figure('Visible','off');
         for iFrame = 1:size(dataLsci,3)
             sensorImage = dataLsci(:,:,iFrame);
