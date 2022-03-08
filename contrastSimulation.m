@@ -34,6 +34,8 @@ d=ones(1,floor(observationTime/dT))*d;
 %introduce signal to d here
 %e.g. d=d+d*0.1*sin(1:1:length(d));
 
+d=d+d*0.1.*sawtooth(1:1:length(d),1/4);
+
 
 %volume
 sizeX = 100; %mum

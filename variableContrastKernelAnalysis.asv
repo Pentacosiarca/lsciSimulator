@@ -1,0 +1,24 @@
+
+
+xcorrSensorImage = xcorr(sensorImage(50,:),'unbiased');
+centeredSignal = xcorrSensorImage(round(length(xcorrSensorImage)/2)-10:round(length(xcorrSensorImage)/2)+10);
+[pks,~,widths,~] = findpeaks(centeredSignal,1:length(centeredSignal));
+maxPeakIdx = find(pks == max(pks));
+speckleSize = widths(maxPeakIdx(1))/2
+
+K = std(sensorImage,1,'all') / mean(sensorImage,[1 2]);
+
+figure,imagesc(sensorImage)
+
+keyboard;
+
+if exist("speckleVScontrastK.mat",'file') == 2
+    load ("speckleVScontrastK")
+    count = count + 1;
+else
+    count = 1;
+end
+speckleVScontrastK (:,count) = [K, speckleSize];
+save('speckleVScontrastK','speckleVScontrastK','count')
+
+

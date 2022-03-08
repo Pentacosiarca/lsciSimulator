@@ -2,19 +2,20 @@ clear all, clc, close all,
 % Modelling of particles in a volume
 %% setup parameters:
 % generating randomly distributed particles in a volume
-nParticles = single(100); % reference value: 100
+nParticles = single(1000); % reference value: 100
 particlesVolumeSizeXyz = single([10; 10; 0.01]); % reference value: [10; 10; 0.01]
 
 % defining sensor
 sensorDistanceToZ = single(1000); % reference value: 1000
-sensorSizeXy = single([0.5; 0.5]); % reference value: [0.5; 0.5]
-sensorResolutionXy = single([100; 100]); % reference value: [100; 100]
+sensorXY = 2; % [0.1,0.2,0.3,0.6,1,1.5,2.1,2.8.]
+sensorSizeXy = single([sensorXY; sensorXY]); % reference value: [0.5; 0.5]
+sensorResolutionXy = single([10; 10]); % reference value: [100; 100]
 
 % particle movement
-nMoves = 200000; % reference value: 1000
+nMoves = 20; % reference value: 1000
 maxSpeedParticle = 0.001; % reference value: 0.001
 directionParticleDegreesConstant = 0; % reference value: 0
-kindOfMotion = 'periodic'; % options: 'periodic' 'ordered' 'brownian'
+kindOfMotion = 'periodic'; % options: 'periodic' 'ordered' 'brownian' 'random'
 if strcmp(kindOfMotion,'periodic')
     isAddNoise = 0;
     if isAddNoise
@@ -24,18 +25,64 @@ if strcmp(kindOfMotion,'periodic')
     minSpeedParticle = 0.001;
     
     exposureTimeDivision = 0.001; % seconds, reference value = 0.005
-    Fs = 1000; % Sampling frequency (samples per second) 
+    Fs = 200; % Sampling frequency (samples per second) 
     dt = (1/Fs) * exposureTimeDivision; % seconds per sample 
-    nPeriods = 5; 
+    nPeriods = 50; 
     tRecording = nPeriods / mainHeartFreq; % recording time in seconds
     t = (0:dt:tRecording)'; % seconds 
     signal = sawtooth (2*pi*mainHeartFreq*t,1/4);
     signal = abs(min(signal)) + signal;
     signal = signal / max(signal);
-    periodicMovement = minSpeedParticle + ((maxSpeedParticle - minSpeedParticle) * signal); % setting offset and scale
+
+    signalSharp = sawtooth (2*pi*mainHeartFreq*t,0.5);
+    signalSharp = abs(min(signalSharp)) + signalSharp;
+    signalSharp = signalSharp / max(signalSharp);
+
+    signalMask = square (2*pi*mainHeartFreq*t,60);
+    signalMask = abs(min(signalMask)) + signalMask;
+    signalMask = signalMask / max(signalMask);
+
+    signalSharp = signalSharp .* signalMask;
+
+    samplesToConsider = 20000;
+
+    findThresholdSharpEdge = signalSharp(1:samplesToConsider);
+    signalSharpFindZeros = find(findThresholdSharpEdge==0);
+    thresholdSharpEdge = signalSharp(signalSharpFindZeros(2)-1);
+    
+    signalSharp = signalSharp - thresholdSharpEdge;
+    signalSharp(signalSharp<0) = 0;
+    
+% figure,plot(signalSharp)
+% figure,plot(signalSharp(1:samplesToConsider)), hold on
+% plot(signalMask(1:samplesToConsider))
+
+    signalDephased = zeros(1,length(signalSharp));
+
+    signalDephasedAngle = 20; %angle in degrees
+    signalDephasedAmplitude = 1.5; % bump on top of sawtooth signal
+
+    samplesPerPeriod = length(signalSharp)/nPeriods;
+    samplesDephased = floor((samplesPerPeriod/360)*signalDephasedAngle);
+    signalDephased(samplesDephased+1:end) = signalDephasedAmplitude * ...
+                                          signalSharp(1:end-samplesDephased);
+    signalTwo = signal + signalDephased';
+    
+    filterPercentage = 10;
+    medfiltCoeff = round(samplesPerPeriod/filterPercentage);
+
+    factorFilter = 1;
+    filterWindow = ones(1,medfiltCoeff)/factorFilter;
+    
+    signalTwo = filter(filterWindow, 1, signalTwo);
+
+
+    
+    periodicMovement = minSpeedParticle + ((maxSpeedParticle - minSpeedParticle) * signalTwo); % setting offset and scale
     nMoves = length(t);
 end
 
+% figure,plot(signal)
 
 % %%%%%%%% PLOTS / SAVING%%%%%%%%%%
 % save the signal
@@ -140,7 +187,7 @@ end
 wb = waitbar(0,'Please wait...');
 for iter = 1:nMoves
 %update waitbar
-waitbar(single(iter)/single(nMoves),wb,'Processing simulation...');
+waitbar(single(iter)/single(nMoves),wb,['Processing simulation... iteration: ',num2str(single(iter)),' of ',num2str(single(nMoves))]);
     switch kindOfMotion
         case 'periodic'
             speedParticle = periodicMovement(iter);
@@ -151,6 +198,12 @@ waitbar(single(iter)/single(nMoves),wb,'Processing simulation...');
         case 'brownian'
             speedParticle = rand(1,nParticles)*maxSpeedParticle;
             directionParticleDegrees = randi([0 360],1,nParticles);
+        case 'random'
+            particlesPositionXyz = [rand(nParticles, 1)*particlesVolumeSizeXyz(1),...
+                                    rand(nParticles, 1)*particlesVolumeSizeXyz(2),...
+                                    -rand(nParticles, 1)*particlesVolumeSizeXyz(3)];
+            speedParticle = 0;
+            directionParticleDegrees = 0;
     end
         
     particlesPositionXyz(:,1) = particlesPositionXyz(:,1)' + ...
@@ -237,7 +290,7 @@ waitbar(single(iter)/single(nMoves),wb,'Processing simulation...');
     sensorImage = reshape(pixelsIntensity,[sensorResolutionXy(1) sensorResolutionXy(2)]);
 %     clear pixelsIntensity
 
-    %% Save sensorImage to calculate Time Intensity Autocorrelation Fuction at the end
+    %% Save sensorImage
     % 
     if strcmp(kindOfMotion,'periodic')
         exposureCounter = exposureCounter + 1;
@@ -274,7 +327,14 @@ waitbar(single(iter)/single(nMoves),wb,'Processing simulation...');
         close all;
     end
 
+    %% calculate autocorrelation
+    isAutocorrelation = 0;
+    if isAutocorrelation
 
+        variableContrastKernelAnalysis;
+
+%         keyboard;
+    end
     %% create gif
     if isGif
           % Capture the plot as an image 
@@ -319,7 +379,7 @@ if isSaveSignal
         fileName = [fileName,'_',numberWithZero];
     end
     fileName = [fileName,'.mat'];
-    save([saveFolder,fileName],'timeIntensityAutocorrelationFunction','exposureTimeDivision','Fs','nPeriods','mainHeartFreq','-mat','-v7.3');
+    save([saveFolder,fileName],'timeIntensityAutocorrelationFunction','exposureTimeDivision','Fs','nPeriods','mainHeartFreq','periodicMovement','-mat','-v7.3');
 end
 
     
