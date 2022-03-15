@@ -7,7 +7,9 @@ addpath(genpath('./../'))
 % ylabel('K')
 
 loadPath = 'C:\Users\Alberto\Desktop\github\data\simulation\';
-load([loadPath,'periodic_signal_10_by_10_fs_200_per_20_02'])
+% load([loadPath,'periodic_signal_10_by_10_fs_200_per_50'])
+
+load([loadPath,'periodic_signal_10_by_10_fs_200_per_50'])
 
 % contrastKernel = 5;
 % batchSize = 100; 
@@ -50,7 +52,7 @@ locMinima(end) = 1;
 
 isException = 1;
 if isException
-deleteLocMin = 11:20:391;
+deleteLocMin = 11:20:loc(end);
 locMinima(deleteLocMin) = 0;
 end
 
@@ -58,7 +60,11 @@ figure,plot(x,periodicDownSampled,x(locMinima),periodicDownSampled(locMinima),'r
 
 positionLocMin = find(locMinima>0);
 
-
+%% --------------------------------
+% normalizing signals
+% ---------------------------------
+refSignal = periodicDownSampled(positionLocMin(1):positionLocMin(2));
+ts1=(ts1-min(refSignal))./(max(refSignal)-min(refSignal));
 
 %% --------------------------------
 % mean values of Temporal Contrast

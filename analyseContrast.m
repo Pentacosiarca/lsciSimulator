@@ -59,6 +59,13 @@ end
 figure,plot(x,periodicDownSampled,x(locMinima),periodicDownSampled(locMinima),'r*')
 
 positionLocMin = find(locMinima>0);
+positionLocMin(end) = [];
+
+%% --------------------------------
+% normalizing signals
+% ---------------------------------
+refSignal = periodicDownSampled(positionLocMin(1):positionLocMin(2));
+refSignal=(refSignal-min(refSignal))./(max(refSignal)-min(refSignal));
 
 
 
@@ -78,10 +85,11 @@ averagePulse = calculateAveragePulse (dataLsci,positionLocMin,typeOfAveraging);
 bfiTSave=squeeze(averagePulse(end/2,end/2,:));
 
 bfiTSave=1./(bfiTSave.^2);
+bfiTSave=(bfiTSave-min(bfiTSave))./(max(bfiTSave)-min(bfiTSave));
 figure,hold on,
-yyaxis left
-plot(periodicDownSampled(positionLocMin(1):positionLocMin(2))),
-yyaxis right
+% yyaxis left
+plot(refSignal),
+% yyaxis right
 plot(bfiTSave)
 legend('ideal pulse','calculated average pulse')
 hold off
@@ -102,10 +110,11 @@ averagePulse = calculateAveragePulse (dataLsci,positionLocMin,typeOfAveraging);
 % bfiTSave=squeeze(mean(averagePulse,[1,2]));
 bfiTSave=squeeze(averagePulse(end/2,end/2,:));
 bfiTSave=1./(bfiTSave.^2);
+bfiTSave=(bfiTSave-min(bfiTSave))./(max(bfiTSave)-min(bfiTSave));
 figure,hold on,
-yyaxis left
-plot(periodicDownSampled(positionLocMin(1):positionLocMin(2))),
-yyaxis right
+% yyaxis left
+plot(refSignal),
+% yyaxis right
 plot(bfiTSave)
 legend('ideal pulse','calculated average pulse')
 hold off
@@ -123,10 +132,11 @@ averagePulse = calculateAveragePulse (dataLsci,positionLocMin,typeOfAveraging);
 % bfiTSave=squeeze(mean(averagePulse,[1,2]));
 bfiTSave=squeeze(averagePulse(end/2,end/2,:));
 bfiTSave=1./(bfiTSave.^2);
+bfiTSave=(bfiTSave-min(bfiTSave))./(max(bfiTSave)-min(bfiTSave));
 figure,hold on,
-yyaxis left
-plot(periodicDownSampled(positionLocMin(1):positionLocMin(2))),
-yyaxis right
+% yyaxis left
+plot(refSignal),
+% yyaxis right
 plot(bfiTSave)
 hold off
 legend('ideal pulse','calculated average pulse')
@@ -141,10 +151,11 @@ if isLSCIsignal
 % bfiTSave=squeeze(mean(dataLsci,[1,2]));
 bfiTSave=squeeze(dataLsci(end/2,end/2,:));
 bfiTSave=1./(bfiTSave.^2);
+bfiTSave=(bfiTSave-min(bfiTSave))./(max(bfiTSave)-min(bfiTSave));
 figure,hold on,
-yyaxis left
-plot(periodicDownSampled(positionLocMin(1):positionLocMin(2))),
-yyaxis right
+% yyaxis left
+plot(refSignal),
+% yyaxis right
 plot(bfiTSave(positionLocMin(1):positionLocMin(2)))
 hold off
 legend('ideal pulse','calculated average pulse')
