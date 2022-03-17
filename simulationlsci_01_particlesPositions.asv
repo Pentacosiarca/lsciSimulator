@@ -1,4 +1,7 @@
-clear all, clc, close all,
+function blockOfParticles = simulationlsci_01_particlesPositions (kindOfMotion, lastFrameParticles)
+
+if lastFrameParticles == 0
+
 % Modelling of particles in a volume
 %% setup parameters:
 % generating randomly distributed particles in a volume
@@ -27,7 +30,7 @@ if strcmp(kindOfMotion,'periodic')
     exposureTimeDivision = 0.001; % seconds, reference value = 0.005
     Fs = 200; % Sampling frequency (samples per second) 
     dt = (1/Fs) * exposureTimeDivision; % seconds per sample 
-    nPeriods = 50; 
+    nPeriods = 1; 
     tRecording = nPeriods / mainHeartFreq; % recording time in seconds
     t = (0:dt:tRecording)'; % seconds 
     signal = sawtooth (2*pi*mainHeartFreq*t,1/4);
@@ -116,6 +119,10 @@ particlesPositionXyz = [rand(nParticles, 1)*particlesVolumeSizeXyz(1),...
                         rand(nParticles, 1)*particlesVolumeSizeXyz(2),...
                         -rand(nParticles, 1)*particlesVolumeSizeXyz(3)];
 
+else
+    particlesPositionXyz = lastFrameParticles;
+end
+
 
 %% defining sensor
 % sensorDistanceToZ = 10;
@@ -184,6 +191,9 @@ else
     timeIntensityAutocorrelationFunction = nan(sensorResolutionXy(1),sensorResolutionXy(2),nMoves);
 end
 
+% euclideanDistanceParticlesToPixelsSumOfSquares = nan(nParticles,sensorResolutionXy(1)*sensorResolutionXy(2),nMoves,'single');
+blockOfParticles = nan(nParticles,sensorResolutionXy(1)*sensorResolutionXy(2),nMoves,'single');
+
 wb = waitbar(0,'Please wait...');
 for iter = 1:nMoves
 %update waitbar
@@ -249,6 +259,8 @@ waitbar(single(iter)/single(nMoves),wb,['Processing simulation... iteration: ',n
 %                              particlesPositionXyz(particlesPositionXyz(:,2) < 0, 1) - ...
 %                              cosd(directionParticleDegrees) * particlesVolumeSizeXyz(2);
     end
+
+    blockOfParticles(:,:,iter) = particlesPositionXyz;
                                 
     %% distance from particle to pixel
     particlesAugmented = repmat(particlesPositionXyz,[1 1 sensorResolutionXy(1)*sensorResolutionXy(2)]);
@@ -260,106 +272,106 @@ waitbar(single(iter)/single(nMoves),wb,['Processing simulation... iteration: ',n
                                                 particlesAugmented,...
                                                 permute(sensorPixelsCoordinatesXyzAugmented,[3 1 2]));
 %     clear particlesAugmented sensorPixelsCoordinatesXyzAugmented 
-    euclideanDistanceParticlesToPixelsSumOfSquares = sum(euclideanDistanceParticlesToPixelsDifference.^2,2);
+    euclideanDistanceParticlesToPixelsSumOfSquares(:,:,iter) = squeeze(sum(euclideanDistanceParticlesToPixelsDifference.^2,2));
 %     clear euclideanDistanceParticlesToPixelsDifference
 
 
-    %% light scattered from particles for every pixel
-    % E=exp(i*k*r -1i*k*c*t)./r
-    %
-    % i - imaginary unit, r - distance from particle to pixel, 
-    % c - speed of light, k - wavenumber (2pi/lambda), wavelength lambda=0.785 um, time t=0
-    c = single(299792458000000); % um/s
-    lambda = single(0.785); % microns
-    k = 2*pi/lambda;
-    t = 0; %single(1);
-    r = euclideanDistanceParticlesToPixelsSumOfSquares;
-%     clear euclideanDistanceParticlesToPixelsSumOfSquares
+%     %% light scattered from particles for every pixel
+%     % E=exp(i*k*r -1i*k*c*t)./r
+%     %
+%     % i - imaginary unit, r - distance from particle to pixel, 
+%     % c - speed of light, k - wavenumber (2pi/lambda), wavelength lambda=0.785 um, time t=0
+%     c = single(299792458000000); % um/s
+%     lambda = single(0.785); % microns
+%     k = 2*pi/lambda;
+%     t = 0; %single(1);
+%     r = euclideanDistanceParticlesToPixelsSumOfSquares;
+% %     clear euclideanDistanceParticlesToPixelsSumOfSquares
+%     
+%     E=exp(1i*k*r -1i*k*c*t)./r;
+% %     clear r
+% 
+%     superpositionOfScatteredLight = sum(E,1);
+% %     clear E
+%     pixelsIntensity = superpositionOfScatteredLight .* conj(superpositionOfScatteredLight);
+% %     clear superpositionOfScatteredLight
+%     pixelsIntensity = pixelsIntensity/ mean(pixelsIntensity);
+
+
+%     %% Reshaping to make sensor image
+%     sensorImage = reshape(pixelsIntensity,[sensorResolutionXy(1) sensorResolutionXy(2)]);
+% %     clear pixelsIntensity
+
+%     %% Save sensorImage
+%     % 
+%     if strcmp(kindOfMotion,'periodic')
+%         exposureCounter = exposureCounter + 1;
+%         exposureFrames(:,:,exposureCounter) = sensorImage;
+%         modIter = ceil(iter/ exposureSamples) - floor(iter/ exposureSamples);
+%         if modIter == 0
+%             exposureCounter = 0;
+%             timeIntensityCounter = timeIntensityCounter + 1;
+%             timeIntensityAutocorrelationFunction(:,:,timeIntensityCounter) = mean(exposureFrames,3);
+%         end
+%     else
+%         timeIntensityAutocorrelationFunction(:,:,iter) = sensorImage;
+%     end
     
-    E=exp(1i*k*r -1i*k*c*t)./r;
-%     clear r
-
-    superpositionOfScatteredLight = sum(E,1);
-%     clear E
-    pixelsIntensity = superpositionOfScatteredLight .* conj(superpositionOfScatteredLight);
-%     clear superpositionOfScatteredLight
-    pixelsIntensity = pixelsIntensity/ mean(pixelsIntensity);
-
-
-    %% Reshaping to make sensor image
-    sensorImage = reshape(pixelsIntensity,[sensorResolutionXy(1) sensorResolutionXy(2)]);
-%     clear pixelsIntensity
-
-    %% Save sensorImage
-    % 
-    if strcmp(kindOfMotion,'periodic')
-        exposureCounter = exposureCounter + 1;
-        exposureFrames(:,:,exposureCounter) = sensorImage;
-        modIter = ceil(iter/ exposureSamples) - floor(iter/ exposureSamples);
-        if modIter == 0
-            exposureCounter = 0;
-            timeIntensityCounter = timeIntensityCounter + 1;
-            timeIntensityAutocorrelationFunction(:,:,timeIntensityCounter) = mean(exposureFrames,3);
-        end
-    else
-        timeIntensityAutocorrelationFunction(:,:,iter) = sensorImage;
-    end
     
-    
-    %% plot the figures
-%     isPlot = 0;
-    if isPlot
-        h = figure;
-        screenSize = get(0, 'ScreenSize');
-        set(gcf, 'Position',  [floor(screenSize(3)/9), floor(screenSize(4)/5), ...
-            floor(screenSize(3)/9)*7, floor(screenSize(4)/5)*3])
-        subplot(1,2,1),
-        scatter(particlesPositionXyz(:,1),particlesPositionXyz(:,2)),
-        axisXmin = 0;
-        axisXmax = particlesVolumeSizeXyz(1);
-        axisYmin = 0;
-        axisYmax = particlesVolumeSizeXyz(2);
-        axis([axisXmin axisXmax axisYmin axisYmax]),
-        subplot(1,2,2),
-        imagesc(sensorImage)
-        % caxis([prctile(sensorImage(:),0.1),prctile(sensorImage(:),99.9)])
-        pause;
-        close all;
-    end
+%     %% plot the figures
+% %     isPlot = 0;
+%     if isPlot
+%         h = figure;
+%         screenSize = get(0, 'ScreenSize');
+%         set(gcf, 'Position',  [floor(screenSize(3)/9), floor(screenSize(4)/5), ...
+%             floor(screenSize(3)/9)*7, floor(screenSize(4)/5)*3])
+%         subplot(1,2,1),
+%         scatter(particlesPositionXyz(:,1),particlesPositionXyz(:,2)),
+%         axisXmin = 0;
+%         axisXmax = particlesVolumeSizeXyz(1);
+%         axisYmin = 0;
+%         axisYmax = particlesVolumeSizeXyz(2);
+%         axis([axisXmin axisXmax axisYmin axisYmax]),
+%         subplot(1,2,2),
+%         imagesc(sensorImage)
+%         % caxis([prctile(sensorImage(:),0.1),prctile(sensorImage(:),99.9)])
+%         pause;
+%         close all;
+%     end
 
-    %% calculate autocorrelation
-    isAutocorrelation = 0;
-    if isAutocorrelation
-
-        variableContrastKernelAnalysis;
-
-%         keyboard;
-    end
-    %% create gif
-    if isGif
-          % Capture the plot as an image 
-
-        fileName = [savePath,kindOfMotion,'_lscigif.gif'];
-        h = figure('Visible','off');
-
-        imagesc(sensorImage)
-        frame = getframe(h); 
-        im = frame2im(frame); 
-        [imind,cm] = rgb2ind(im,256); 
-        % Write to the GIF File 
-        if iter == 1 
-          imwrite(imind,cm,fileName,'gif', 'Loopcount',inf); 
-        else 
-          imwrite(imind,cm,fileName,'gif','WriteMode','append'); 
-        end 
-          
-    end
+%     %% calculate autocorrelation
+%     isAutocorrelation = 0;
+%     if isAutocorrelation
+% 
+%         variableContrastKernelAnalysis;
+% 
+% %         keyboard;
+%     end
+%     %% create gif
+%     if isGif
+%           % Capture the plot as an image 
+% 
+%         fileName = [savePath,kindOfMotion,'_lscigif.gif'];
+%         h = figure('Visible','off');
+% 
+%         imagesc(sensorImage)
+%         frame = getframe(h); 
+%         im = frame2im(frame); 
+%         [imind,cm] = rgb2ind(im,256); 
+%         % Write to the GIF File 
+%         if iter == 1 
+%           imwrite(imind,cm,fileName,'gif', 'Loopcount',inf); 
+%         else 
+%           imwrite(imind,cm,fileName,'gif','WriteMode','append'); 
+%         end 
+%           
+%     end
     
 %     clear sensorImage 
     
-    if isCalculateTiaf || isGif
-        display(['iteration: ',num2str(iter),' of ',num2str(nMoves)])
-    end
+%     if isCalculateTiaf || isGif
+%         display(['iteration: ',num2str(iter),' of ',num2str(nMoves)])
+%     end
 end
 close all
 close(wb);
@@ -368,7 +380,7 @@ close(wb);
 %% Saving the signal 
 if isSaveSignal
 
-    fileName = [kindOfMotion,'_signal_',num2str(sensorResolutionXy(1)),'_by_',num2str(sensorResolutionXy(2)),'_fs_',num2str(Fs),'_per_',num2str(nPeriods)];
+    fileName = [kindOfMotion,'_OnlyParticlesSignal_',num2str(sensorResolutionXy(1)),'_by_',num2str(sensorResolutionXy(2)),'_fs_',num2str(Fs),'_per_',num2str(nPeriods)];
     dirFile = dir([saveFolder,fileName,'*']);
     if ~isempty(dirFile)
         if length(num2str(length(dirFile)+1))<2
@@ -379,7 +391,7 @@ if isSaveSignal
         fileName = [fileName,'_',numberWithZero];
     end
     fileName = [fileName,'.mat'];
-    save([saveFolder,fileName],'timeIntensityAutocorrelationFunction','exposureTimeDivision','Fs','nPeriods','mainHeartFreq','periodicMovement','-mat','-v7.3');
+    save([saveFolder,fileName],'euclideanDistanceParticlesToPixelsSumOfSquares','exposureTimeDivision','Fs','nPeriods','mainHeartFreq','periodicMovement','-mat','-v7.3');
 end
 
     
