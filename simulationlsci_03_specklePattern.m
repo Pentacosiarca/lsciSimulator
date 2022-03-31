@@ -1,88 +1,87 @@
 function simulationlsci_03_specklePattern (blockComposition)
 
-clear all, clc, close all,
 % Modelling of particles in a volume
 %% setup parameters:
 % generating randomly distributed particles in a volume
-nParticles = single(1000); % reference value: 100
+nParticles = single(size(blockComposition,1)); % reference value: 100
 particlesVolumeSizeXyz = single([10; 10; 0.01]); % reference value: [10; 10; 0.01]
 
 % defining sensor
 sensorDistanceToZ = single(1000); % reference value: 1000
 sensorXY = 2; % [0.1,0.2,0.3,0.6,1,1.5,2.1,2.8.]
 sensorSizeXy = single([sensorXY; sensorXY]); % reference value: [0.5; 0.5]
-sensorResolutionXy = single([10; 10]); % reference value: [100; 100]
+sensorResolutionXy = single([100; 100]); % reference value: [100; 100]
 
-% particle movement
-nMoves = 20; % reference value: 1000
-maxSpeedParticle = 0.001; % reference value: 0.001
-directionParticleDegreesConstant = 0; % reference value: 0
-kindOfMotion = 'periodic'; % options: 'periodic' 'ordered' 'brownian' 'random'
-if strcmp(kindOfMotion,'periodic')
-    isAddNoise = 0;
-    if isAddNoise
-    end
+% % particle movement
+% nMoves = 20; % reference value: 1000
+% maxSpeedParticle = 0.001; % reference value: 0.001
+% directionParticleDegreesConstant = 0; % reference value: 0
+% kindOfMotion = 'periodic'; % options: 'periodic' 'ordered' 'brownian' 'random'
+% if strcmp(kindOfMotion,'periodic')
+%     isAddNoise = 0;
+%     if isAddNoise
+%     end
     mainHeartFreq = 10; % reference: 10
     maxSpeedParticle = 0.004; % reference value: 0.001
     minSpeedParticle = 0.001;
-    
+%     
     exposureTimeDivision = 0.001; % seconds, reference value = 0.005
     Fs = 200; % Sampling frequency (samples per second) 
     dt = (1/Fs) * exposureTimeDivision; % seconds per sample 
-    nPeriods = 50; 
+    nPeriods = 1; 
     tRecording = nPeriods / mainHeartFreq; % recording time in seconds
-    t = (0:dt:tRecording)'; % seconds 
-    signal = sawtooth (2*pi*mainHeartFreq*t,1/4);
-    signal = abs(min(signal)) + signal;
-    signal = signal / max(signal);
-
-    signalSharp = sawtooth (2*pi*mainHeartFreq*t,0.5);
-    signalSharp = abs(min(signalSharp)) + signalSharp;
-    signalSharp = signalSharp / max(signalSharp);
-
-    signalMask = square (2*pi*mainHeartFreq*t,60);
-    signalMask = abs(min(signalMask)) + signalMask;
-    signalMask = signalMask / max(signalMask);
-
-    signalSharp = signalSharp .* signalMask;
-
-    samplesToConsider = 20000;
-
-    findThresholdSharpEdge = signalSharp(1:samplesToConsider);
-    signalSharpFindZeros = find(findThresholdSharpEdge==0);
-    thresholdSharpEdge = signalSharp(signalSharpFindZeros(2)-1);
-    
-    signalSharp = signalSharp - thresholdSharpEdge;
-    signalSharp(signalSharp<0) = 0;
-    
-% figure,plot(signalSharp)
-% figure,plot(signalSharp(1:samplesToConsider)), hold on
-% plot(signalMask(1:samplesToConsider))
-
-    signalDephased = zeros(1,length(signalSharp));
-
-    signalDephasedAngle = 20; %angle in degrees
-    signalDephasedAmplitude = 1.5; % bump on top of sawtooth signal
-
-    samplesPerPeriod = length(signalSharp)/nPeriods;
-    samplesDephased = floor((samplesPerPeriod/360)*signalDephasedAngle);
-    signalDephased(samplesDephased+1:end) = signalDephasedAmplitude * ...
-                                          signalSharp(1:end-samplesDephased);
-    signalTwo = signal + signalDephased';
-    
-    filterPercentage = 10;
-    medfiltCoeff = round(samplesPerPeriod/filterPercentage);
-
-    factorFilter = 1;
-    filterWindow = ones(1,medfiltCoeff)/factorFilter;
-    
-    signalTwo = filter(filterWindow, 1, signalTwo);
-
-
-    
-    periodicMovement = minSpeedParticle + ((maxSpeedParticle - minSpeedParticle) * signalTwo); % setting offset and scale
-    nMoves = length(t);
-end
+%     t = (0:dt:tRecording)'; % seconds 
+%     signal = sawtooth (2*pi*mainHeartFreq*t,1/4);
+%     signal = abs(min(signal)) + signal;
+%     signal = signal / max(signal);
+% 
+%     signalSharp = sawtooth (2*pi*mainHeartFreq*t,0.5);
+%     signalSharp = abs(min(signalSharp)) + signalSharp;
+%     signalSharp = signalSharp / max(signalSharp);
+% 
+%     signalMask = square (2*pi*mainHeartFreq*t,60);
+%     signalMask = abs(min(signalMask)) + signalMask;
+%     signalMask = signalMask / max(signalMask);
+% 
+%     signalSharp = signalSharp .* signalMask;
+% 
+%     samplesToConsider = 20000;
+% 
+%     findThresholdSharpEdge = signalSharp(1:samplesToConsider);
+%     signalSharpFindZeros = find(findThresholdSharpEdge==0);
+%     thresholdSharpEdge = signalSharp(signalSharpFindZeros(2)-1);
+%     
+%     signalSharp = signalSharp - thresholdSharpEdge;
+%     signalSharp(signalSharp<0) = 0;
+%     
+% % figure,plot(signalSharp)
+% % figure,plot(signalSharp(1:samplesToConsider)), hold on
+% % plot(signalMask(1:samplesToConsider))
+% 
+%     signalDephased = zeros(1,length(signalSharp));
+% 
+%     signalDephasedAngle = 20; %angle in degrees
+%     signalDephasedAmplitude = 1.5; % bump on top of sawtooth signal
+% 
+%     samplesPerPeriod = length(signalSharp)/nPeriods;
+%     samplesDephased = floor((samplesPerPeriod/360)*signalDephasedAngle);
+%     signalDephased(samplesDephased+1:end) = signalDephasedAmplitude * ...
+%                                           signalSharp(1:end-samplesDephased);
+%     signalTwo = signal + signalDephased';
+%     
+%     filterPercentage = 10;
+%     medfiltCoeff = round(samplesPerPeriod/filterPercentage);
+% 
+%     factorFilter = 1;
+%     filterWindow = ones(1,medfiltCoeff)/factorFilter;
+%     
+%     signalTwo = filter(filterWindow, 1, signalTwo);
+% 
+% 
+%     
+%     periodicMovement = minSpeedParticle + ((maxSpeedParticle - minSpeedParticle) * signalTwo); % setting offset and scale
+%     nMoves = length(t);
+% end
 
 % figure,plot(signal)
 
@@ -91,32 +90,35 @@ end
 isSaveSignal = uint8(1);
 saveFolder = './../data/simulation/';
 
-% plot the figures
-isPlot = uint8(0);
-%     isSavePlot = uint8(0); % to implement
+% % plot the figures
+% isPlot = uint8(0);
+% %     isSavePlot = uint8(0); % to implement
+% 
+% 
+% % create gif
+% isGif = uint8(0);
+% %     isSaveGif = uint8(0); % to implement
+% 
+% % Calculating Time Intensity Autocorrelation Function (tiaf)
+% isCalculateTiaf = uint8(0);
+% %     isSaveCalculatedTiaf = uint8(0); % to implement
+%         maxTau = single(50);
+%         
+% % To calibrate the camera position and or particles volume, etc use the
+% % following visualizer.
+% %   visualizing particles with respect to sensors:
+% isVisualizeParticlesSensors = uint8(0);
+% 
+% 
+% %% generating randomly distributed particles in a volume
+% % nParticles = 100;
+% % particlesVolumeSizeXyz = [0.5; 0.5; 0.1];
+% particlesPositionXyz = [rand(nParticles, 1)*particlesVolumeSizeXyz(1),...
+%                         rand(nParticles, 1)*particlesVolumeSizeXyz(2),...
+%                         -rand(nParticles, 1)*particlesVolumeSizeXyz(3)];
 
-
-% create gif
-isGif = uint8(0);
-%     isSaveGif = uint8(0); % to implement
-
-% Calculating Time Intensity Autocorrelation Function (tiaf)
-isCalculateTiaf = uint8(0);
-%     isSaveCalculatedTiaf = uint8(0); % to implement
-        maxTau = single(50);
-        
-% To calibrate the camera position and or particles volume, etc use the
-% following visualizer.
-%   visualizing particles with respect to sensors:
-isVisualizeParticlesSensors = uint8(0);
-
-
-%% generating randomly distributed particles in a volume
-% nParticles = 100;
-% particlesVolumeSizeXyz = [0.5; 0.5; 0.1];
-particlesPositionXyz = [rand(nParticles, 1)*particlesVolumeSizeXyz(1),...
-                        rand(nParticles, 1)*particlesVolumeSizeXyz(2),...
-                        -rand(nParticles, 1)*particlesVolumeSizeXyz(3)];
+% particlesPositionXyz = blockComposition;
+nMoves = size(blockComposition,3);
 
 
 %% defining sensor
@@ -144,19 +146,19 @@ sensorPixelsCoordinatesXyz = [sensorPixelsCoordinates_X_RepeatedYTimesReshaped;.
 clear sensorPixelsCoordinates_X_RepeatedYTimesReshaped sensorPixelsCoordinates_Y_RepeatedXTimes
 
 
-%% visualizing particles with respect to sensors
-if isVisualizeParticlesSensors
-    scatter3(sensorPixelsCoordinatesXyz(:,1),...
-             sensorPixelsCoordinatesXyz(:,2),...
-             sensorPixelsCoordinatesXyz(:,3));
-    hold on;
-    scatter3(particlesPositionXyz(:,1),...
-             particlesPositionXyz(:,2),...
-             particlesPositionXyz(:,3),'r');
-
-    hold off;
-    pause;
-end
+% %% visualizing particles with respect to sensors
+% if isVisualizeParticlesSensors
+%     scatter3(sensorPixelsCoordinatesXyz(:,1),...
+%              sensorPixelsCoordinatesXyz(:,2),...
+%              sensorPixelsCoordinatesXyz(:,3));
+%     hold on;
+%     scatter3(particlesPositionXyz(:,1),...
+%              particlesPositionXyz(:,2),...
+%              particlesPositionXyz(:,3),'r');
+% 
+%     hold off;
+%     pause;
+% end
 
 
 %% particle moving
@@ -175,82 +177,91 @@ particlesFrameCorners = [0,0;...
                          particlesVolumeSizeXyz(1), 0;...
                          0, particlesVolumeSizeXyz(2);...
                          particlesVolumeSizeXyz(1), particlesVolumeSizeXyz(2)];
-if strcmp(kindOfMotion,'periodic')
+% if strcmp(kindOfMotion,'periodic')
     nSamples = tRecording * Fs;
     exposureSamples = floor(nMoves / nSamples);
     exposureFrames = nan(sensorResolutionXy(1),sensorResolutionXy(2),exposureSamples);
     exposureCounter = 0;
     timeIntensityAutocorrelationFunction = nan(sensorResolutionXy(1),sensorResolutionXy(2),nSamples);
     timeIntensityCounter = 0;
-else
-    timeIntensityAutocorrelationFunction = nan(sensorResolutionXy(1),sensorResolutionXy(2),nMoves);
-end
+% else
+%     timeIntensityAutocorrelationFunction = nan(sensorResolutionXy(1),sensorResolutionXy(2),nMoves);
+% end
+
+tic;
+elapsedTime = 0;
 
 wb = waitbar(0,'Please wait...');
 for iter = 1:nMoves
+    elapsedTime_pre = toc;
+
 %update waitbar
-waitbar(single(iter)/single(nMoves),wb,['Processing simulation... iteration: ',num2str(single(iter)),' of ',num2str(single(nMoves))]);
-    switch kindOfMotion
-        case 'periodic'
-            speedParticle = periodicMovement(iter);
-            directionParticleDegrees = directionParticleDegreesConstant;
-        case 'ordered'
-            speedParticle = maxSpeedParticle;
-            directionParticleDegrees = directionParticleDegreesConstant;
-        case 'brownian'
-            speedParticle = rand(1,nParticles)*maxSpeedParticle;
-            directionParticleDegrees = randi([0 360],1,nParticles);
-        case 'random'
-            particlesPositionXyz = [rand(nParticles, 1)*particlesVolumeSizeXyz(1),...
-                                    rand(nParticles, 1)*particlesVolumeSizeXyz(2),...
-                                    -rand(nParticles, 1)*particlesVolumeSizeXyz(3)];
-            speedParticle = 0;
-            directionParticleDegrees = 0;
-    end
-        
-    particlesPositionXyz(:,1) = particlesPositionXyz(:,1)' + ...
-                                speedParticle .* cosd(directionParticleDegrees);
-    particlesPositionXyz(:,2) = particlesPositionXyz(:,2)' + ...
-                                speedParticle .* sind(directionParticleDegrees);
+waitbar(single(iter)/single(nMoves),wb,{['Processing simulation... iteration: ',num2str(single(iter)),' of ',num2str(single(nMoves))]},...
+    {'Estimated remaining time: ',num2str(elapsedTimeH),' h, ',num2str(elapsedTimeM),' m, ',num2str(elapsedTimeS),' s'});
+%     switch kindOfMotion
+%         case 'periodic'
+%             speedParticle = periodicMovement(iter);
+%             directionParticleDegrees = directionParticleDegreesConstant;
+%         case 'ordered'
+%             speedParticle = maxSpeedParticle;
+%             directionParticleDegrees = directionParticleDegreesConstant;
+%         case 'brownian'
+%             speedParticle = rand(1,nParticles)*maxSpeedParticle;
+%             directionParticleDegrees = randi([0 360],1,nParticles);
+%         case 'random'
+%             particlesPositionXyz = [rand(nParticles, 1)*particlesVolumeSizeXyz(1),...
+%                                     rand(nParticles, 1)*particlesVolumeSizeXyz(2),...
+%                                     -rand(nParticles, 1)*particlesVolumeSizeXyz(3)];
+%             speedParticle = 0;
+%             directionParticleDegrees = 0;
+%     end
+%         
+%     particlesPositionXyz(:,1) = particlesPositionXyz(:,1)' + ...
+%                                 speedParticle .* cosd(directionParticleDegrees);
+%     particlesPositionXyz(:,2) = particlesPositionXyz(:,2)' + ...
+%                                 speedParticle .* sind(directionParticleDegrees);
+
                                 
-    %% if particle is out of scope bring it to the begining of the frame
-    %       in the same trajectory and direction
-    
-    % when particles are out of the X axis:
-    % - from the side of the max volume side in the X axis
-    
-    if sum(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1)) > 0
-        particlesPositionXyz(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1), 2) = ...
-                 rand(1, sum(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1))) * particlesVolumeSizeXyz(1);
-        particlesPositionXyz(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1), 1) = 0;
-%                              particlesPositionXyz(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1), 1) - ...
-%                              cosd(directionParticleDegrees) * particlesVolumeSizeXyz(1);
-    end
-    % - below 0
-    if sum(particlesPositionXyz(:,1) < 0) > 0
-        particlesPositionXyz(particlesPositionXyz(:,1) < 0, 2) = ...
-                 rand(1, sum(particlesPositionXyz(:,1) < 0)) * particlesVolumeSizeXyz(1);
-        particlesPositionXyz(particlesPositionXyz(:,1) < 0, 1) = particlesVolumeSizeXyz(2); 
-%                              particlesPositionXyz(particlesPositionXyz(:,1) < 0, 1) - ...
-%                              cosd(directionParticleDegrees) * particlesVolumeSizeXyz(1);
-    end
-    
-    % - from the side of the max volume side in the Y axis
-    if sum(particlesPositionXyz(:,2) > particlesVolumeSizeXyz(2)) > 0
-        particlesPositionXyz(particlesPositionXyz(:,2) > particlesVolumeSizeXyz(2), 2) = ...
-                 rand(1, sum(particlesPositionXyz(:,2) > particlesVolumeSizeXyz(2))) * particlesVolumeSizeXyz(2);
-        particlesPositionXyz(particlesPositionXyz(:,2) > particlesVolumeSizeXyz(2), 1) = 0; 
-%                              particlesPositionXyz(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(2), 2) - ...
-%                              cosd(directionParticleDegrees) * particlesVolumeSizeXyz(2);
-    end
-    % - below 0
-    if sum(particlesPositionXyz(:,2) < 0) > 0
-        particlesPositionXyz(particlesPositionXyz(:,2) < 0, 2) = ...
-                 rand(1, sum(particlesPositionXyz(:,2) < 0)) * particlesVolumeSizeXyz(2);
-        particlesPositionXyz(particlesPositionXyz(:,2) < 0, 1) = particlesVolumeSizeXyz(1); 
-%                              particlesPositionXyz(particlesPositionXyz(:,2) < 0, 1) - ...
-%                              cosd(directionParticleDegrees) * particlesVolumeSizeXyz(2);
-    end
+%     %% if particle is out of scope bring it to the begining of the frame
+%     %       in the same trajectory and direction
+%     
+%     % when particles are out of the X axis:
+%     % - from the side of the max volume side in the X axis
+%     
+%     if sum(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1)) > 0
+%         particlesPositionXyz(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1), 2) = ...
+%                  rand(1, sum(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1))) * particlesVolumeSizeXyz(1);
+%         particlesPositionXyz(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1), 1) = 0;
+% %                              particlesPositionXyz(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1), 1) - ...
+% %                              cosd(directionParticleDegrees) * particlesVolumeSizeXyz(1);
+%     end
+%     % - below 0
+%     if sum(particlesPositionXyz(:,1) < 0) > 0
+%         particlesPositionXyz(particlesPositionXyz(:,1) < 0, 2) = ...
+%                  rand(1, sum(particlesPositionXyz(:,1) < 0)) * particlesVolumeSizeXyz(1);
+%         particlesPositionXyz(particlesPositionXyz(:,1) < 0, 1) = particlesVolumeSizeXyz(2); 
+% %                              particlesPositionXyz(particlesPositionXyz(:,1) < 0, 1) - ...
+% %                              cosd(directionParticleDegrees) * particlesVolumeSizeXyz(1);
+%     end
+%     
+%     % - from the side of the max volume side in the Y axis
+%     if sum(particlesPositionXyz(:,2) > particlesVolumeSizeXyz(2)) > 0
+%         particlesPositionXyz(particlesPositionXyz(:,2) > particlesVolumeSizeXyz(2), 2) = ...
+%                  rand(1, sum(particlesPositionXyz(:,2) > particlesVolumeSizeXyz(2))) * particlesVolumeSizeXyz(2);
+%         particlesPositionXyz(particlesPositionXyz(:,2) > particlesVolumeSizeXyz(2), 1) = 0; 
+% %                              particlesPositionXyz(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(2), 2) - ...
+% %                              cosd(directionParticleDegrees) * particlesVolumeSizeXyz(2);
+%     end
+%     % - below 0
+%     if sum(particlesPositionXyz(:,2) < 0) > 0
+%         particlesPositionXyz(particlesPositionXyz(:,2) < 0, 2) = ...
+%                  rand(1, sum(particlesPositionXyz(:,2) < 0)) * particlesVolumeSizeXyz(2);
+%         particlesPositionXyz(particlesPositionXyz(:,2) < 0, 1) = particlesVolumeSizeXyz(1); 
+% %                              particlesPositionXyz(particlesPositionXyz(:,2) < 0, 1) - ...
+% %                              cosd(directionParticleDegrees) * particlesVolumeSizeXyz(2);
+%     end
+
+    particlesPositionXyz = blockComposition(:,:,iter);
                                 
     %% distance from particle to pixel
     particlesAugmented = repmat(particlesPositionXyz,[1 1 sensorResolutionXy(1)*sensorResolutionXy(2)]);
@@ -292,9 +303,9 @@ waitbar(single(iter)/single(nMoves),wb,['Processing simulation... iteration: ',n
     sensorImage = reshape(pixelsIntensity,[sensorResolutionXy(1) sensorResolutionXy(2)]);
 %     clear pixelsIntensity
 
-    %% Save sensorImage
-    % 
-    if strcmp(kindOfMotion,'periodic')
+%     %% Save sensorImage
+%     % 
+%     if strcmp(kindOfMotion,'periodic')
         exposureCounter = exposureCounter + 1;
         exposureFrames(:,:,exposureCounter) = sensorImage;
         modIter = ceil(iter/ exposureSamples) - floor(iter/ exposureSamples);
@@ -303,65 +314,75 @@ waitbar(single(iter)/single(nMoves),wb,['Processing simulation... iteration: ',n
             timeIntensityCounter = timeIntensityCounter + 1;
             timeIntensityAutocorrelationFunction(:,:,timeIntensityCounter) = mean(exposureFrames,3);
         end
-    else
-        timeIntensityAutocorrelationFunction(:,:,iter) = sensorImage;
-    end
+%     else
+%         timeIntensityAutocorrelationFunction(:,:,iter) = sensorImage;
+%     end
     
+%     timeIntensityAutocorrelationFunction(:,:,iter) = sensorImage;
     
     %% plot the figures
 %     isPlot = 0;
-    if isPlot
-        h = figure;
-        screenSize = get(0, 'ScreenSize');
-        set(gcf, 'Position',  [floor(screenSize(3)/9), floor(screenSize(4)/5), ...
-            floor(screenSize(3)/9)*7, floor(screenSize(4)/5)*3])
-        subplot(1,2,1),
-        scatter(particlesPositionXyz(:,1),particlesPositionXyz(:,2)),
-        axisXmin = 0;
-        axisXmax = particlesVolumeSizeXyz(1);
-        axisYmin = 0;
-        axisYmax = particlesVolumeSizeXyz(2);
-        axis([axisXmin axisXmax axisYmin axisYmax]),
-        subplot(1,2,2),
-        imagesc(sensorImage)
-        % caxis([prctile(sensorImage(:),0.1),prctile(sensorImage(:),99.9)])
-        pause;
-        close all;
-    end
+%     if isPlot
+%         h = figure;
+%         screenSize = get(0, 'ScreenSize');
+%         set(gcf, 'Position',  [floor(screenSize(3)/9), floor(screenSize(4)/5), ...
+%             floor(screenSize(3)/9)*7, floor(screenSize(4)/5)*3])
+%         subplot(1,2,1),
+%         scatter(particlesPositionXyz(:,1),particlesPositionXyz(:,2)),
+%         axisXmin = 0;
+%         axisXmax = particlesVolumeSizeXyz(1);
+%         axisYmin = 0;
+%         axisYmax = particlesVolumeSizeXyz(2);
+%         axis([axisXmin axisXmax axisYmin axisYmax]),
+%         subplot(1,2,2),
+%         imagesc(sensorImage)
+%         % caxis([prctile(sensorImage(:),0.1),prctile(sensorImage(:),99.9)])
+%         pause;
+%         close all;
+%     end
 
-    %% calculate autocorrelation
-    isAutocorrelation = 0;
-    if isAutocorrelation
-
-        variableContrastKernelAnalysis;
-
-%         keyboard;
-    end
+%     %% calculate autocorrelation
+%     isAutocorrelation = 0;
+%     if isAutocorrelation
+% 
+%         variableContrastKernelAnalysis;
+% 
+% %         keyboard;
+%     end
     %% create gif
-    if isGif
-          % Capture the plot as an image 
-
-        fileName = [savePath,kindOfMotion,'_lscigif.gif'];
-        h = figure('Visible','off');
-
-        imagesc(sensorImage)
-        frame = getframe(h); 
-        im = frame2im(frame); 
-        [imind,cm] = rgb2ind(im,256); 
-        % Write to the GIF File 
-        if iter == 1 
-          imwrite(imind,cm,fileName,'gif', 'Loopcount',inf); 
-        else 
-          imwrite(imind,cm,fileName,'gif','WriteMode','append'); 
-        end 
-          
-    end
+%     if isGif
+%           % Capture the plot as an image 
+% 
+%         fileName = [savePath,kindOfMotion,'_lscigif.gif'];
+%         h = figure('Visible','off');
+% 
+%         imagesc(sensorImage)
+%         frame = getframe(h); 
+%         im = frame2im(frame); 
+%         [imind,cm] = rgb2ind(im,256); 
+%         % Write to the GIF File 
+%         if iter == 1 
+%           imwrite(imind,cm,fileName,'gif', 'Loopcount',inf); 
+%         else 
+%           imwrite(imind,cm,fileName,'gif','WriteMode','append'); 
+%         end 
+%           
+%     end
     
 %     clear sensorImage 
     
-    if isCalculateTiaf || isGif
-        display(['iteration: ',num2str(iter),' of ',num2str(nMoves)])
-    end
+%     if isCalculateTiaf || isGif
+%         display(['iteration: ',num2str(iter),' of ',num2str(nMoves)])
+%     end
+
+
+elapsedTime_post = toc;
+elapsedTime = abs(elapsedTime_post - elapsedTime_pre) * abs(iter - Moves);
+elapsedTimeH = floor(elapsedTime / 3600);
+elapsedTimeM = floor ((elapsedTime - elapsedTimeH * 3600)/60);
+elapsedTimeS = elapsedTime - (elapsedTimeM * 60 + elapsedTimeH * 3600);
+
+
 end
 close all
 close(wb);
@@ -370,7 +391,9 @@ close(wb);
 %% Saving the signal 
 if isSaveSignal
 
-    fileName = [kindOfMotion,'_signal_',num2str(sensorResolutionXy(1)),'_by_',num2str(sensorResolutionXy(2)),'_fs_',num2str(Fs),'_per_',num2str(nPeriods)];
+%     fileName = [kindOfMotion,'_signal_',num2str(sensorResolutionXy(1)),'_by_',num2str(sensorResolutionXy(2)),'_fs_',num2str(Fs),'_per_',num2str(nPeriods)];
+    fileName = ['block_',num2str(sensorResolutionXy(1)),'_by_',num2str(sensorResolutionXy(2))];
+
     dirFile = dir([saveFolder,fileName,'*']);
     if ~isempty(dirFile)
         if length(num2str(length(dirFile)+1))<2
@@ -381,7 +404,7 @@ if isSaveSignal
         fileName = [fileName,'_',numberWithZero];
     end
     fileName = [fileName,'.mat'];
-    save([saveFolder,fileName],'timeIntensityAutocorrelationFunction','exposureTimeDivision','Fs','nPeriods','mainHeartFreq','periodicMovement','-mat','-v7.3');
+    save([saveFolder,fileName],'timeIntensityAutocorrelationFunction','-mat','-v7.3');
 end
 
     
@@ -390,37 +413,37 @@ end
 %% Calculating Time Intensity Autocorrelation Function (tiaf)
 % isCalculateTiaf = 1;
 
-if isCalculateTiaf
-
-%     clear sensorPixelsCoordinatesXyz
-%     maxTau = 100;
-    tiafIntensityTimesIntensityDelayed = nan(sensorResolutionXy(1),...
-                                             sensorResolutionXy(2),...
-                                             nMoves-maxTau);
-    tiaf = nan(1,maxTau);
-    tiafMeanSquaredTime = mean(timeIntensityAutocorrelationFunction,3).^2;
-    for iTau = 1:maxTau
-        tiafIntensityTimesIntensityDelayed = mean(...
-            timeIntensityAutocorrelationFunction(:,:,1:end-maxTau) .* ...
-            timeIntensityAutocorrelationFunction(:,:,iTau:end-maxTau+iTau-1)...
-            ,3);
-        
-        tiafDivision = tiafIntensityTimesIntensityDelayed ./ tiafMeanSquaredTime;
-        tiaf(iTau) = mean(mean(tiafDivision,1),2);
-    end
-
-    decorrelationLag = linspace(1,maxTau,maxTau);
-    figure,plot(decorrelationLag, tiaf)
-
-    nameOrder = kindOfMotion;
-    
-    nameTitle = [nameOrder,' motion'];
-    title(nameTitle)
-    xlabel('decorrelation time \tau_{c}')
-    ylabel('Time Intensity Autocorrelation')
-    
-    if isSaveCalculatedTiaf
-
-        
-    end
-end
+% if isCalculateTiaf
+% 
+% %     clear sensorPixelsCoordinatesXyz
+% %     maxTau = 100;
+%     tiafIntensityTimesIntensityDelayed = nan(sensorResolutionXy(1),...
+%                                              sensorResolutionXy(2),...
+%                                              nMoves-maxTau);
+%     tiaf = nan(1,maxTau);
+%     tiafMeanSquaredTime = mean(timeIntensityAutocorrelationFunction,3).^2;
+%     for iTau = 1:maxTau
+%         tiafIntensityTimesIntensityDelayed = mean(...
+%             timeIntensityAutocorrelationFunction(:,:,1:end-maxTau) .* ...
+%             timeIntensityAutocorrelationFunction(:,:,iTau:end-maxTau+iTau-1)...
+%             ,3);
+%         
+%         tiafDivision = tiafIntensityTimesIntensityDelayed ./ tiafMeanSquaredTime;
+%         tiaf(iTau) = mean(mean(tiafDivision,1),2);
+%     end
+% 
+%     decorrelationLag = linspace(1,maxTau,maxTau);
+%     figure,plot(decorrelationLag, tiaf)
+% 
+%     nameOrder = kindOfMotion;
+%     
+%     nameTitle = [nameOrder,' motion'];
+%     title(nameTitle)
+%     xlabel('decorrelation time \tau_{c}')
+%     ylabel('Time Intensity Autocorrelation')
+%     
+%     if isSaveCalculatedTiaf
+% 
+%         
+%     end
+% end

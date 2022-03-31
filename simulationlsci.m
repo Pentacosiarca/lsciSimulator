@@ -1,4 +1,4 @@
-clear all, clc, close all,
+% clear all, clc, close all,
 % Modelling of particles in a volume
 %% setup parameters:
 % generating randomly distributed particles in a volume

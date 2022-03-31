@@ -1,6 +1,6 @@
-function blockOfParticles = simulationlsci_01_particlesPositions (kindOfMotion, lastFrameParticles)
+function [blockOfParticles, nMoves] = simulationlsci_01_particlesPositions (kindOfMotion, lastFrameParticles,nMoves)
 
-if lastFrameParticles == 0
+
 
 % Modelling of particles in a volume
 %% setup parameters:
@@ -12,7 +12,7 @@ particlesVolumeSizeXyz = single([10; 10; 0.01]); % reference value: [10; 10; 0.0
 sensorDistanceToZ = single(1000); % reference value: 1000
 sensorXY = 2; % [0.1,0.2,0.3,0.6,1,1.5,2.1,2.8.]
 sensorSizeXy = single([sensorXY; sensorXY]); % reference value: [0.5; 0.5]
-sensorResolutionXy = single([10; 10]); % reference value: [100; 100]
+sensorResolutionXy = single([5; 5]); % reference value: [100; 100]
 
 % if strcmp(kindOfMotion,'periodic')
     isAddNoise = 0;
@@ -78,13 +78,17 @@ sensorResolutionXy = single([10; 10]); % reference value: [100; 100]
     
     periodicMovement = minSpeedParticle + ((maxSpeedParticle - minSpeedParticle) * signalTwo); % setting offset and scale
     nMoves = length(t);
-% end
 
 % particle movement
 % nMoves = 20; % reference value: 1000
 maxSpeedParticle = 0.001; % reference value: 0.001
 directionParticleDegreesConstant = 0; % reference value: 0
 % kindOfMotion = 'periodic'; % options: 'periodic' 'ordered' 'brownian' 'random'
+
+
+% end
+
+
 
 % figure,plot(signal)
 
@@ -106,6 +110,8 @@ isGif = uint8(0);
 isCalculateTiaf = uint8(0);
 %     isSaveCalculatedTiaf = uint8(0); % to implement
         maxTau = single(50);
+
+if lastFrameParticles == 0
         
 % To calibrate the camera position and or particles volume, etc use the
 % following visualizer.
@@ -121,48 +127,51 @@ particlesPositionXyz = [rand(nParticles, 1)*particlesVolumeSizeXyz(1),...
                         -rand(nParticles, 1)*particlesVolumeSizeXyz(3)];
 
 else
+
     particlesPositionXyz = lastFrameParticles;
+    nParticles = size(lastFrameParticles,1);
+
 end
 
 
-%% defining sensor
-% sensorDistanceToZ = 10;
-% sensorSizeXy = [10;10];
-% sensorResolutionXy = [20;20];
+% %% defining sensor
+% % sensorDistanceToZ = 10;
+% % sensorSizeXy = [10;10];
+% % sensorResolutionXy = [20;20];
+% 
+% sensorCentreXyz = [particlesVolumeSizeXyz(1)/2;...
+%                    particlesVolumeSizeXyz(2)/2;...
+%                    sensorDistanceToZ];
+% 
+% sensorPixelsCoordinatesX = linspace(sensorCentreXyz(1)-sensorSizeXy(1),sensorCentreXyz(1)+sensorSizeXy(1),sensorResolutionXy(1));
+% sensorPixelsCoordinatesY = linspace(sensorCentreXyz(2)-sensorSizeXy(2),sensorCentreXyz(2)+sensorSizeXy(2),sensorResolutionXy(2));
+% 
+% sensorPixelsCoordinates_X_RepeatedYTimes = repmat(sensorPixelsCoordinatesX,[sensorResolutionXy(2) 1]);
+% sensorPixelsCoordinates_X_RepeatedYTimesReshaped = reshape(sensorPixelsCoordinates_X_RepeatedYTimes,[1 sensorResolutionXy(1)*sensorResolutionXy(2)]);
+% clear sensorPixelsCoordinates_X_RepeatedYTimes
+% 
+% sensorPixelsCoordinates_Y_RepeatedXTimes = repmat(sensorPixelsCoordinatesY,[1 sensorResolutionXy(1)]);
+% clear sensorPixelsCoordinatesX sensorPixelsCoordinatesY
+% 
+% sensorPixelsCoordinatesXyz = [sensorPixelsCoordinates_X_RepeatedYTimesReshaped;...
+%                               sensorPixelsCoordinates_Y_RepeatedXTimes;...
+%                               repmat(sensorCentreXyz(3),[1,sensorResolutionXy(1)*sensorResolutionXy(2)])]';
+% clear sensorPixelsCoordinates_X_RepeatedYTimesReshaped sensorPixelsCoordinates_Y_RepeatedXTimes
 
-sensorCentreXyz = [particlesVolumeSizeXyz(1)/2;...
-                   particlesVolumeSizeXyz(2)/2;...
-                   sensorDistanceToZ];
 
-sensorPixelsCoordinatesX = linspace(sensorCentreXyz(1)-sensorSizeXy(1),sensorCentreXyz(1)+sensorSizeXy(1),sensorResolutionXy(1));
-sensorPixelsCoordinatesY = linspace(sensorCentreXyz(2)-sensorSizeXy(2),sensorCentreXyz(2)+sensorSizeXy(2),sensorResolutionXy(2));
-
-sensorPixelsCoordinates_X_RepeatedYTimes = repmat(sensorPixelsCoordinatesX,[sensorResolutionXy(2) 1]);
-sensorPixelsCoordinates_X_RepeatedYTimesReshaped = reshape(sensorPixelsCoordinates_X_RepeatedYTimes,[1 sensorResolutionXy(1)*sensorResolutionXy(2)]);
-clear sensorPixelsCoordinates_X_RepeatedYTimes
-
-sensorPixelsCoordinates_Y_RepeatedXTimes = repmat(sensorPixelsCoordinatesY,[1 sensorResolutionXy(1)]);
-clear sensorPixelsCoordinatesX sensorPixelsCoordinatesY
-
-sensorPixelsCoordinatesXyz = [sensorPixelsCoordinates_X_RepeatedYTimesReshaped;...
-                              sensorPixelsCoordinates_Y_RepeatedXTimes;...
-                              repmat(sensorCentreXyz(3),[1,sensorResolutionXy(1)*sensorResolutionXy(2)])]';
-clear sensorPixelsCoordinates_X_RepeatedYTimesReshaped sensorPixelsCoordinates_Y_RepeatedXTimes
-
-
-%% visualizing particles with respect to sensors
-if isVisualizeParticlesSensors
-    scatter3(sensorPixelsCoordinatesXyz(:,1),...
-             sensorPixelsCoordinatesXyz(:,2),...
-             sensorPixelsCoordinatesXyz(:,3));
-    hold on;
-    scatter3(particlesPositionXyz(:,1),...
-             particlesPositionXyz(:,2),...
-             particlesPositionXyz(:,3),'r');
-
-    hold off;
-    pause;
-end
+% %% visualizing particles with respect to sensors
+% if isVisualizeParticlesSensors
+%     scatter3(sensorPixelsCoordinatesXyz(:,1),...
+%              sensorPixelsCoordinatesXyz(:,2),...
+%              sensorPixelsCoordinatesXyz(:,3));
+%     hold on;
+%     scatter3(particlesPositionXyz(:,1),...
+%              particlesPositionXyz(:,2),...
+%              particlesPositionXyz(:,3),'r');
+% 
+%     hold off;
+%     pause;
+% end
 
 
 %% particle moving
@@ -177,20 +186,20 @@ end
 %   bottom right    = particlesVolumeSizeXyz(1), 0
 %   upper left      = 0, particlesVolumeSizeXyz(2)
 %   upper right     = particlesVolumeSizeXyz(1), particlesVolumeSizeXyz(2)
-particlesFrameCorners = [0,0;...
-                         particlesVolumeSizeXyz(1), 0;...
-                         0, particlesVolumeSizeXyz(2);...
-                         particlesVolumeSizeXyz(1), particlesVolumeSizeXyz(2)];
-if strcmp(kindOfMotion,'periodic')
-    nSamples = tRecording * Fs;
-    exposureSamples = floor(nMoves / nSamples);
-    exposureFrames = nan(sensorResolutionXy(1),sensorResolutionXy(2),exposureSamples);
-    exposureCounter = 0;
-    timeIntensityAutocorrelationFunction = nan(sensorResolutionXy(1),sensorResolutionXy(2),nSamples);
-    timeIntensityCounter = 0;
-else
-    timeIntensityAutocorrelationFunction = nan(sensorResolutionXy(1),sensorResolutionXy(2),nMoves);
-end
+% particlesFrameCorners = [0,0;...
+%                          particlesVolumeSizeXyz(1), 0;...
+%                          0, particlesVolumeSizeXyz(2);...
+%                          particlesVolumeSizeXyz(1), particlesVolumeSizeXyz(2)];
+% if strcmp(kindOfMotion,'periodic')
+%     nSamples = tRecording * Fs;
+%     exposureSamples = floor(nMoves / nSamples);
+%     exposureFrames = nan(sensorResolutionXy(1),sensorResolutionXy(2),exposureSamples);
+%     exposureCounter = 0;
+%     timeIntensityAutocorrelationFunction = nan(sensorResolutionXy(1),sensorResolutionXy(2),nSamples);
+%     timeIntensityCounter = 0;
+% else
+%     timeIntensityAutocorrelationFunction = nan(sensorResolutionXy(1),sensorResolutionXy(2),nMoves);
+% end
 
 % euclideanDistanceParticlesToPixelsSumOfSquares = nan(nParticles,sensorResolutionXy(1)*sensorResolutionXy(2),nMoves,'single');
 blockOfParticles = nan(nParticles,3,nMoves,'single');
@@ -198,7 +207,7 @@ blockOfParticles = nan(nParticles,3,nMoves,'single');
 wb = waitbar(0,'Please wait...');
 for iter = 1:nMoves
 %update waitbar
-waitbar(single(iter)/single(nMoves),wb,['Processing simulation... iteration: ',num2str(single(iter)),' of ',num2str(single(nMoves))]);
+waitbar(single(iter)/single(nMoves),wb,['Processing simulation - ',kindOfMotion,' -... iteration: ',num2str(single(iter)),' of ',num2str(single(nMoves))]);
     switch kindOfMotion
         case 'periodic'
             speedParticle = periodicMovement(iter);
@@ -228,10 +237,15 @@ waitbar(single(iter)/single(nMoves),wb,['Processing simulation... iteration: ',n
     % when particles are out of the X axis:
     % - from the side of the max volume side in the X axis
     
-    if sum(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1)) > 0
+    if sum(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1)) > 0 % check if any particle is outside the volume
         particlesPositionXyz(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1), 2) = ...
                  rand(1, sum(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1))) * particlesVolumeSizeXyz(1);
-        particlesPositionXyz(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1), 1) = 0;
+
+        idxTh = find(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1));
+
+        diffVal = abs(particlesPositionXyz(idxTh,1) - particlesVolumeSizeXyz(1));
+        particlesPositionXyz(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1), 1) = diffVal;
+
 %                              particlesPositionXyz(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(1), 1) - ...
 %                              cosd(directionParticleDegrees) * particlesVolumeSizeXyz(1);
     end
@@ -239,16 +253,25 @@ waitbar(single(iter)/single(nMoves),wb,['Processing simulation... iteration: ',n
     if sum(particlesPositionXyz(:,1) < 0) > 0
         particlesPositionXyz(particlesPositionXyz(:,1) < 0, 2) = ...
                  rand(1, sum(particlesPositionXyz(:,1) < 0)) * particlesVolumeSizeXyz(1);
-        particlesPositionXyz(particlesPositionXyz(:,1) < 0, 1) = particlesVolumeSizeXyz(2); 
+
+        idxTh = find(particlesPositionXyz(:,1) < 0);
+        particlesPositionXyz(idxTh,1) = particlesPositionXyz(idxTh,1) + particlesVolumeSizeXyz(2);
+
+%         particlesPositionXyz(particlesPositionXyz(:,1) < 0, 1) = particlesVolumeSizeXyz(2); 
 %                              particlesPositionXyz(particlesPositionXyz(:,1) < 0, 1) - ...
 %                              cosd(directionParticleDegrees) * particlesVolumeSizeXyz(1);
     end
     
     % - from the side of the max volume side in the Y axis
     if sum(particlesPositionXyz(:,2) > particlesVolumeSizeXyz(2)) > 0
-        particlesPositionXyz(particlesPositionXyz(:,2) > particlesVolumeSizeXyz(2), 2) = ...
+        particlesPositionXyz(particlesPositionXyz(:,2) > particlesVolumeSizeXyz(2), 1) = ...
                  rand(1, sum(particlesPositionXyz(:,2) > particlesVolumeSizeXyz(2))) * particlesVolumeSizeXyz(2);
-        particlesPositionXyz(particlesPositionXyz(:,2) > particlesVolumeSizeXyz(2), 1) = 0; 
+        
+        idxTh = find(particlesPositionXyz(:,2) > particlesVolumeSizeXyz(2));
+        diffVal = abs(particlesPositionXyz(idxTh,2) - particlesVolumeSizeXyz(2));
+        particlesPositionXyz(particlesPositionXyz(:,2) > particlesVolumeSizeXyz(2), 2) = diffVal;
+
+%         particlesPositionXyz(particlesPositionXyz(:,2) > particlesVolumeSizeXyz(2), 1) = 0; 
 %                              particlesPositionXyz(particlesPositionXyz(:,1) > particlesVolumeSizeXyz(2), 2) - ...
 %                              cosd(directionParticleDegrees) * particlesVolumeSizeXyz(2);
     end
@@ -256,7 +279,11 @@ waitbar(single(iter)/single(nMoves),wb,['Processing simulation... iteration: ',n
     if sum(particlesPositionXyz(:,2) < 0) > 0
         particlesPositionXyz(particlesPositionXyz(:,2) < 0, 2) = ...
                  rand(1, sum(particlesPositionXyz(:,2) < 0)) * particlesVolumeSizeXyz(2);
-        particlesPositionXyz(particlesPositionXyz(:,2) < 0, 1) = particlesVolumeSizeXyz(1); 
+
+        idxTh = find(particlesPositionXyz(:,2) < 0);
+        particlesPositionXyz(idxTh,2) = particlesPositionXyz(idxTh,2) + particlesVolumeSizeXyz(1);
+
+%         particlesPositionXyz(particlesPositionXyz(:,2) < 0, 1) = particlesVolumeSizeXyz(1); 
 %                              particlesPositionXyz(particlesPositionXyz(:,2) < 0, 1) - ...
 %                              cosd(directionParticleDegrees) * particlesVolumeSizeXyz(2);
     end
