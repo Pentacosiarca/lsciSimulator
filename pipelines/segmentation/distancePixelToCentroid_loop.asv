@@ -1,0 +1,59 @@
+%% Distance Superpixels to Centroids
+function distanceP2C = distancePixelToCentroid_loop (normBF,centroids)
+
+    distanceP2C = zeros(size(normBF,1),size(normBF,2),size(centroids,1));
+    Nst = 1;
+    Nsp = 3;
+    
+    for iRows = 1:size(normBF,1)
+        for iCols = 1:size(normBF,2)
+            normBF_pixelHist = squeeze(normBF(iRows,iCols,:));
+            Dst = distanceStats (normBF_pixelHist,normBF,centroids);
+            Dsp = distanceEucl (iRows,iCols,centroids);
+            distanceP2C_centroids(iRows,iCols,:) = sqrt((Dst/Nst).^2 + (Dsp/Nsp).^2);
+        end
+    end
+
+    minDist = min(distanceP2C_centroids,[],3);
+    figure,imagesc(minDist)
+    keyboard;
+    % choose the centroid with the minimum distance.
+    distanceP2C = find(distanceP2C_centroids == min(distanceP2C_centroids,[],3));
+    distanceP2C = reshape(distanceP2C,[size(normBF,1),size(normBF,2)]);
+
+    squeeze(distanceP2C_centroids(1,1,:));
+    find(min(distanceP2C_centroids(1,1,:),[],3));
+
+end
+
+
+%% Statistical Distance
+function Dst = distanceStats (normBF_pixelHist,normBF,centroids)
+    Dst = zeros(size(centroids,1),1);
+    for iCentroids = 1:size(centroids,1)
+        try
+        centroidHist = squeeze(normBF(centroids(iCentroids,2),centroids(iCentroids,1),:));
+        catch
+            keyboard
+        end
+%         figure,plot(normBF_pixelHist,'b')
+%         hold on
+%         plot(centroidHist,'r')
+%         hold off
+
+        Dst(iCentroids) = sum(abs(centroidHist - normBF_pixelHist));
+    end
+end
+
+%% Euclidian Distance
+function Dsp = distanceEucl (iRows,iCols,centroids)
+        abSum = centroids - [iCols, iRows];
+        abSquare = abSum.^2;
+        aSumb = sum(abSquare,2);
+        Dsp = sqrt(aSumb);
+end
+
+
+
+
+

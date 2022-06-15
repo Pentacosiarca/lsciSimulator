@@ -15,5 +15,5 @@ for iRow = 1:size(data,1)
 end
 
 timeLapse = toc;
-disp('elapsed time: ',timeLapse);
+disp(['elapsed time: ', num2str(timeLapse)]);
 

@@ -1,0 +1,5 @@
+function centroids = relocateCentroids(distanceP2C,nCentroids)
+
+for iNewCentr = 1:nCentroids
+    
+end

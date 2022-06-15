@@ -13,10 +13,10 @@ data = runBatchLSCI(fileName, 'temporal', 25, batchSize, procType, ...
 
 
 
-[dataLSCI,~,~,~]=readRLS(fileName);
-dataLSCI = single(dataLSCI(:,:,1:1000));
-dataSTD = std(dataLSCI,[],3);
-dataMEAN = mean(dataLSCI,3);
+[data,~,~,~]=readRLS(fileName);
+data = single(data(:,:,1:1000));
+dataSTD = std(data,[],3);
+dataMEAN = mean(data,3);
 dataLSCI_temporalContrast = dataSTD./dataMEAN;
 
 [bloodFlow,parenchyma]=selectAreasToCompare(dataLSCI_temporalContrast);
