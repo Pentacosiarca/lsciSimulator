@@ -1,7 +1,7 @@
 function dataHist = pixelToHistogram(data)
 
-limBinHist = [40,100];
-nBins = 48;
+limBinHist = [20,150];
+nBins = 100;
 
 dataHist = zeros(size(data,1),size(data,2),nBins);
 

@@ -2,15 +2,15 @@
 function distanceP2C = distancePixelToCentroid_loop (normBF,centroids)
 
     distanceP2C = zeros(size(normBF,1),size(normBF,2));
-    Nst = 0.0001;
-    Nsp = 100;
+    Nst = 0.01;
+    Nsp = 10;
     
     for iRows = 1:size(normBF,1)
         for iCols = 1:size(normBF,2)
             normBF_pixelHist = squeeze(normBF(iRows,iCols,:));
             Dst = distanceStats (normBF_pixelHist,normBF,centroids);
             Dsp = distanceEucl (iRows,iCols,centroids);
-            DistanceMetric = sqrt((1/Dst*Nst).^2 + (Dsp/Nsp).^2);
+            DistanceMetric = sqrt((Dst/Nst).^2 + (1/Dsp*Nsp).^2);
 
             minDist = find(DistanceMetric == min(DistanceMetric));
             distanceP2C(iRows,iCols) = minDist(1);

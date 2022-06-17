@@ -32,37 +32,46 @@ dataSTD = std(data,[],3);
 dataMEAN = mean(data,3);
 dataLSCI_temporalContrast = dataSTD./dataMEAN;
 
-[bloodFlow,parenchyma]=selectAreasToCompare(dataLSCI_temporalContrast);
+[bloodFlow,~]=selectAreasToCompare(dataLSCI_temporalContrast);
 
-[dataBloodFlow,~,~,~]=readRLS(fileName,0,[],bloodFlow);
-[dataParenchyma,~,~,~]=readRLS(fileName,0,[],parenchyma);
+[dataSegment,~,~,~]=readRLS(fileName,0,[],bloodFlow);
 
-dataHistBloodFlow = pixelToHistogram(dataBloodFlow);
+dataTLSCI = getTLSCI(dataSegment,size(dataSegment,3),'fastcpu');
 
-maxBF = max(dataHistBloodFlow,[],3);
-minBF = min(dataHistBloodFlow,[],3);
-normBF = bsxfun(@minus,dataHistBloodFlow,minBF) ./ (maxBF - minBF);
+[dataSegment,~,~,~]=readRLS(fileName);
 
-nCols = size(normBF,1); % columns
-nRows = size(normBF,2); % rows
-nBins = size(normBF,3);
+dataHistSegment = pixelToHistogram(dataSegment);
 
+maxHist = max(dataHistSegment,[],3);
+minHist = min(dataHistSegment,[],3);
+normHist = bsxfun(@minus,dataHistSegment,minHist) ./ (maxHist - minHist);
 
-% figure,plot(squeeze(normBF(1,1,:)))
+nCols = size(normHist,1); % columns
+nRows = size(normHist,2); % rows
+nBins = size(normHist,3);
 
-centroids = seedCentroids(nRows,nCols);
+% centroids = seedCentroids(nRows,nCols);
+% nCentroids = size(centroids,1);
 
 % vectorizedIndex = vectorizedCentroids (centroids,nRows);
 
-converge = 1;
-while (converge)
+% converge = 1;
+% while (converge)
 %     distanceP2C = distancePixelToCentroid (dataHist,vectorizedIndex);
-    distanceP2C = distancePixelToCentroid_loop (normBF,centroids);
-    centroids = relocateCentroids();
+%     distanceP2C = distancePixelToCentroid_loop (normHist,centroids);
 
+clusterHist = clusterBasedHist (normHist);
 
+    figure,subplot(1,2,1)
+    imagesc(clusterHist)
+    subplot(1,2,2)
+    imagesc(dataTLSCI)
 
-end
+    figure,imagesc(dataLSCI_temporalContrast)
+
+%     centroids = relocateCentroids(distanceP2C,nCentroids);
+
+% end
 
 
 
@@ -71,10 +80,10 @@ isOther = 0;
 if isOther
 figure,plot(squeeze(dataHistBloodFlow(1,1,:)))
 
-dataSLSCI = getTLSCI(dataBloodFlow,size(dataBloodFlow,3),'fastcpu');
+dataSLSCI = getTLSCI(dataSegment,size(dataSegment,3),'fastcpu');
 figure,imagesc(dataSLSCI)
 
-dataHistBloodFlow = pixelToHistogram(dataBloodFlow);
+dataHistBloodFlow = pixelToHistogram(dataSegment);
 dataHistBloodFlowReshape = reshape(dataHistBloodFlow,[size(dataHistBloodFlow,1)*size(dataHistBloodFlow,2),size(dataHistBloodFlow,3)]);
 
 dataHistParenchyma = pixelToHistogram(dataParenchyma);
