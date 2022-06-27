@@ -6,7 +6,7 @@ clear all, clc, close all,
 lsciLibPath='./../'; %path to the root folder with LSCI processing scripts
 addpath(genpath(lsciLibPath));
 
-path = 'C:\Users\Alberto\Desktop\github\data\dataFromNumberFive\20211213\baslerPulsatility\';
+path = '.\..\..\data\dataFromNumberFive\20211213\baslerPulsatility\';
 name = '20211213_4.rls';
 fileName = [path,name];
 
@@ -26,9 +26,8 @@ fileName = [path,name];
 
 
 
-[data,~,~,~]=readRLS(fileName);
-data = single(data(:,:,1:1000));
-dataSTD = std(data,[],3);
+[data,~,~,~]=readRLS(fileName,0,500);
+dataSTD = std(single(data),[],3);
 dataMEAN = mean(data,3);
 dataLSCI_temporalContrast = dataSTD./dataMEAN;
 
@@ -38,7 +37,9 @@ dataLSCI_temporalContrast = dataSTD./dataMEAN;
 
 dataTLSCI = getTLSCI(dataSegment,size(dataSegment,3),'fastcpu');
 
-[dataSegment,~,~,~]=readRLS(fileName);
+% [dataSegment,~,~,~]=readRLS(fileName);
+% 
+% dataHistSegment = pixelToHistogram(dataSegment);
 
 dataHistSegment = pixelToHistogram(dataSegment);
 

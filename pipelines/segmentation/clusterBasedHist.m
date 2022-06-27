@@ -11,9 +11,9 @@ for iRows = 1:size(normHist,1)
         pixelHist = squeeze(normHist(iRows,iCols,:));
         [~,pValBF] = kstest2(averageHistBF,pixelHist);
         [~,pValPR] = kstest2(averageHistPR,pixelHist);
-
-        whichPval = find([pValBF,pValPR]==min([pValBF,pValPR]));
-        clusterHist(iRows,iCols) = whichPval(1);
+        whichPval = [pValBF,pValPR];
+        [~,idx] = min(whichPval);
+        clusterHist(iRows,iCols) = whichPval(idx(1));
 
     end
 end
