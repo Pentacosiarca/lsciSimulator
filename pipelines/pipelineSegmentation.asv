@@ -24,7 +24,10 @@ fileName = [path,name];
 % nRows = size(dataHist,2); % rows
 % nBins = size(dataHist,3);
 
+if exist([])
 
+isDataSegment = 1;
+if ~isDataSegment
 
 [data,~,~,~]=readRLS(fileName,0,500);
 dataSTD = std(single(data),[],3);
@@ -40,6 +43,8 @@ dataTLSCI = getTLSCI(dataSegment,size(dataSegment,3),'fastcpu');
 % [dataSegment,~,~,~]=readRLS(fileName);
 % 
 % dataHistSegment = pixelToHistogram(dataSegment);
+
+end
 
 dataHistSegment = pixelToHistogram(dataSegment);
 
