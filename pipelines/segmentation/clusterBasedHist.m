@@ -13,7 +13,7 @@ for iRows = 1:size(normHist,1)
         [~,pValPR] = kstest2(averageHistPR,pixelHist);
         whichPval = [pValBF,pValPR];
         [~,idx] = min(whichPval);
-        clusterHist(iRows,iCols) = whichPval(idx(1));
+        clusterHist(iRows,iCols) = idx(1);
 
     end
 end

@@ -23,9 +23,10 @@ fileName = [path,name];
 % nCols = size(dataHist,1); % columns
 % nRows = size(dataHist,2); % rows
 % nBins = size(dataHist,3);
-
+pathDataSegment = 'G:\My Drive\Work\data\SegmentationData/dataSegment.mat';
 isDataSegment = 0;
-if exist('./data/dataSegment.mat','file')==2
+if exist(pathDataSegment,'file')==2
+    load(pathDataSegment);
     isDataSegment = 1;
 end
 
